@@ -1,4 +1,5 @@
-Pinverse <- function(X,data) {
+Pinv <- function(X,data) 
+  {
   for(i in nrow(data))
   {
     i <- data[i,1] 

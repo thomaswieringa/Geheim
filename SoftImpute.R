@@ -1,4 +1,4 @@
-SoftImpute <- function(X,lambda,maxIter = 100,e)
+SoftImpute <- function(X,lambda,maxIter = 100,e,training)
 {
   #Create Initial Z matrix
   Zold <- matrix(0, nrow=nrow(X), ncol=ncol(X))
@@ -9,7 +9,7 @@ SoftImpute <- function(X,lambda,maxIter = 100,e)
     print(paste0("Current iteration:  ", iter))
     
     #Do SVD
-    SVD<-irlba(X+Pinv(Zold,data))
+    SVD<-irlba(X+Pinv(Zold,training))
     U<- SVD$u
     
     #Subtract Lambda

@@ -1,4 +1,4 @@
-MSE <- function(result,testing)
+MSE <- function(result,testing,uniqueUser,uniqueOffer)
 {
   #rescale data
   scaledResult = (result+1)/2
@@ -8,8 +8,26 @@ MSE <- function(result,testing)
   SSE<-0
   for(i in 1:nrow(testing))
   {
-    scaledPrediction <- scaledResult[testing[i,1],testing[i,3]]
-    SE <- (scaledTesting[i,4]-scaledPrediction)^2   
+    prediction   <-0
+    UserID <- which(uniqueUser==testing[i,1])
+    OfferID <- which(uniqueOffer==testing[i,3])
+    
+    SE<-0
+    
+    if(length(UserID)==0 )
+    {
+      SE <- scaledTesting[i,4]-prediction
+    }
+    else if(length(OfferID)==0)
+    {
+      SE <- scaledTesting[i,4]-prediction
+    }
+    
+    else
+    {
+      scaledPrediction <- scaledResult[UserID,OfferID]
+      SE <- (scaledTesting[i,4]-scaledPrediction)^2   
+    }
     SSE <- SSE+SE
   }
   return(SSE/nrow(testing))
