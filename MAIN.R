@@ -5,6 +5,8 @@ library(scales)
 library(caret)
 library(plyr)
 library(data.table)
+library(softImpute)
+
 
 #READ DATA
 #data <- read.csv("~/Desktop/SUNWEB Data/Observations_Report kopie.csv", sep=";")
@@ -56,56 +58,56 @@ for(threshold in thresholds)
   
   selectedUsers <- userIDs[Clickrates>threshold]
   data2 <- data[.(selectedUsers)]
-
+  
   print("Amount of observations")
   print(nrow(data2))
-
+  
   #DATA ID PREP
   uniqueUser2 <- unique(data2$USERID)
   uniqueOffer2 <- unique(data2$OFFERID)
   data2$USERID  <- mapvalues(data2$USERID, from=uniqueUser2, to=1:length(uniqueUser2))
   data2$OFFERID <- mapvalues(data2$OFFERID,from=uniqueOffer2,to=1:length(uniqueOffer2))
-
-
+  
+  
   print("Amount of users")
   print(length(uniqueUser2))
-
+  
   #DATA PARTITIONING
   intrain  <- createDataPartition(y=data2$CLICK,p=0.9,list=FALSE)
   training2 <- data2[intrain,]
   testing2  <- data2[-intrain,]
-
+  
   #CREATE SPARSE MATRIX
   X <- sparseMatrix(i = training$USERID,
-                  j = training$OFFERID,
-                  x = training$CLICK)
-
-
+                    j = training$OFFERID,
+                    x = training$CLICK)
+  
+  
   maxIter <- 100
-  e <- 0.01
+  e <- 0.1
   lambda <-exp(-4)
   results<-list()
   count = 1
   for(l in lambda)
-{
-  result <- SoftImpute(X,l,maxIter,e,data2)
-  results[[count]] = result
-  print("Found solution")
-  count=count+1
-}
-
-
-MSEs <-0
-count = 1
-for(i in 1:length(results))
-{
-  MSEs[count] = MSE(results[[i]],testing,uniqueUser2,uniqueOffer2)
-  count = count +1
-}
-
-MSEresults[counter]=MSEs
-
-counter <- counter+1
+  {
+    result <- SoftImpute(X,l,maxIter,e,data2)
+    results[[count]] = result
+    print("Found solution")
+    count=count+1
+  }
+  
+  
+  MSEs <-0
+  count = 1
+  for(i in 1:length(results))
+  {
+    MSEs[count] = MSE(results[[i]],testing,uniqueUser2,uniqueOffer2)
+    count = count +1
+  }
+  
+  MSEresults[counter]=MSEs
+  
+  counter <- counter+1
 }
 
 
