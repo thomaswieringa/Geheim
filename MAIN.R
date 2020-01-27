@@ -9,8 +9,8 @@ library(softImpute)
 
 
 #READ DATA
-#data <- read.csv("~/Desktop/SUNWEB Data/Observations_Report kopie.csv", sep=";")
-data <- read.csv("~/Desktop/Observations_Report kopie.csv", sep=";")
+data <- read.csv("~/Desktop/SUNWEB Data/Observations_Report kopie.csv", sep=";")
+#data <- read.csv("~/Desktop/Observations_Report kopie.csv", sep=";")
 data<- as.data.table(data)
 
 #DATA RESCALE
@@ -32,7 +32,7 @@ testing  <- data[-intrain,]
 setkey(training, USERID)
 setkey(data, USERID)
 
-#Calculate clickrate for every User in test set
+#Calculate clickrate for every User in training set
 Clickrates <- 0
 for(u in 1:length(uniqueUser))
 {
@@ -78,9 +78,9 @@ for(threshold in thresholds)
   testing2  <- data2[-intrain,]
   
   #CREATE SPARSE MATRIX
-  X <- sparseMatrix(i = training$USERID,
-                    j = training$OFFERID,
-                    x = training$CLICK)
+  X <- Incomplete(i = training2$USERID,
+                    j = training2$OFFERID,
+                    x = training2$CLICK)
   
   
   maxIter <- 100
@@ -91,12 +91,20 @@ for(threshold in thresholds)
   for(l in lambda)
   {
     result <- SoftImpute(X,l,maxIter,e,data2)
+    #Using package
+    #SVD <- softImpute(X,maxit = 1000)
+    #U<- SVD$u
+    #D<- SVD$d-l
+    #V<- SVD$v
+    
+    #Construct 'new' Z.
+    result <- U%*%diag(D)%*%t(V)
     results[[count]] = result
     print("Found solution")
     count=count+1
   }
   
-  
+  print("started calculating MSE")
   MSEs <-0
   count = 1
   for(i in 1:length(results))
@@ -105,8 +113,9 @@ for(threshold in thresholds)
     count = count +1
   }
   
-  MSEresults[counter]=MSEs
+  print("MSE calculated")
   
+  MSEresults[counter]=MSEs
   counter <- counter+1
 }
 

@@ -8,21 +8,21 @@ SoftImpute <- function(X,lambda,maxIter = 100,e,training)
   {
     print(paste0("Current iteration:  ", iter))
     
-    #Do SVD
+    
     start_time <- Sys.time()
     pinvZ <- Pinv(Zold,training)
     end_time <- Sys.time()
     print(end_time - start_time)
     
+    #Do SVD
     start_time <- Sys.time()
-    ewa<-soft.threshold(X+pinvZ)
     SVD<-irlba(X+pinvZ)
-    U<- SVD$u
     end_time <- Sys.time()
     print(end_time - start_time)
     
     
     #Subtract Lambda
+    U<- SVD$u
     D<- SVD$d-lambda
     V<- SVD$v
     
