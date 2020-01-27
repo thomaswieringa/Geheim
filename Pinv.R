@@ -1,10 +1,10 @@
 Pinv <- function(X,data) 
   {
-  for(i in nrow(data))
+  for(i in 1:nrow(data))
   {
-    i <- data[i,1] 
-    j <- data[i,3]
-    X[i,j]=0;
+    i <- data[i]$USERID
+    j <- data[i]$OFFERID
+    X[i,j]=0
   }
   return(X)
 }
