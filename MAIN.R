@@ -9,7 +9,7 @@ library(softImpute)
 
 
 #READ DATA
-data <- read.csv("~/Desktop/SUNWEB Data/Observations_Report kopie.csv", sep=";")
+data <- read.csv("~/Desktop/SUNWEB Data/Observations_Report_100k.csv", sep=";")
 #data <- read.csv("~/Desktop/Observations_Report kopie.csv", sep=";")
 data<- as.data.table(data)
 
@@ -48,7 +48,7 @@ for(u in 1:length(uniqueUser))
 
 #TRAINING CLICK RATES AND REMOVE FROM TESTING
 #thresholds  <- c(0.001,0.01,0.1,0.5,0.6,0.7,0.8,0.9)
-thresholds <- 0.1
+thresholds <- 0
 MSEresults <-0
 counter <-1
 for(threshold in thresholds)
@@ -56,7 +56,7 @@ for(threshold in thresholds)
   print("Trying threshold")
   print(threshold)
   
-  selectedUsers <- userIDs[Clickrates>threshold]
+  selectedUsers <- userIDs[Clickrates>=threshold]
   data2 <- data[.(selectedUsers)]
   
   print("Amount of observations")
@@ -91,6 +91,7 @@ for(threshold in thresholds)
   for(l in lambda)
   {
     result <- SoftImpute(X,l,maxIter,e,data2)
+    
     #Using package
     #SVD <- softImpute(X,maxit = 1000)
     #U<- SVD$u
@@ -98,7 +99,8 @@ for(threshold in thresholds)
     #V<- SVD$v
     
     #Construct 'new' Z.
-    result <- U%*%diag(D)%*%t(V)
+   
+     result <- U%*%diag(D)%*%t(V)
     results[[count]] = result
     print("Found solution")
     count=count+1

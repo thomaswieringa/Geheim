@@ -1,11 +1,11 @@
 Pinv <- function(X,data) 
-  {
-  for(i in 1:nrow(data))
-  {
-    i <- data[i]$USERID
-    j <- data[i]$OFFERID
-    X[i,j]=0
-  }
+{
+
+  ivec <- data$USERID
+  jvec <- data$OFFERID
+
+  X[ cbind(ivec,jvec) ] <- integer(nrow(data))
+  
   return(X)
 }
 
