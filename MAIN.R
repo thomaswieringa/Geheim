@@ -9,7 +9,7 @@ library(softImpute)
 
 
 #READ DATA
-data <- read.csv("~/Desktop/SUNWEB Data/Observations_Report_100k.csv", sep=";")
+data <- read.csv("~/Documents/SunWeb/data2.csv", sep=";")
 #data <- read.csv("~/Desktop/Observations_Report kopie.csv", sep=";")
 data<- as.data.table(data)
 
@@ -24,12 +24,18 @@ data$OFFERID <- mapvalues(data$OFFERID,from=uniqueOffer,to=1:length(uniqueOffer)
 userIDs <- 1:length(uniqueUser)
 
 #DATA PARTITIONING
-intrain  <- createDataPartition(y=data$CLICK,p=0.9,list=FALSE)
-training <- data[intrain,]
-testing  <- data[-intrain,]
+data$USERID <- as.factor(data$USERID)
+intrain <- createDataPartition(data$USERID, p = 0.7, list = F)
+data$USERID <- as.numeric(data$USERID)
+training <- as.data.table(data[intrain,])
+testing  <- as.data.table(data[-intrain,])
+
+uniqueUsersInTrain <-  unique(training$USERID)
+
 
 #Create data.table index for fast access of data
 setkey(training, USERID)
+setkey(testing, USERID)
 setkey(data, USERID)
 
 #Calculate clickrate for every User in training set
@@ -56,32 +62,21 @@ for(threshold in thresholds)
   print("Trying threshold")
   print(threshold)
   
-  selectedUsers <- userIDs[Clickrates>=threshold]
-  data2 <- data[.(selectedUsers)]
-  
-  print("Amount of observations")
-  print(nrow(data2))
+  selectedUsers <- userIDs[Clickrates>threshold]
+  nonselectedUsers <- userIDs[Clickrates<=threshold]
+  training2        <- training[.(selectedUsers)]
+  training2star    <- training[.(nonselectedUsers)]
   
   #DATA ID PREP
-  uniqueUser2 <- unique(data2$USERID)
-  uniqueOffer2 <- unique(data2$OFFERID)
-  data2$USERID  <- mapvalues(data2$USERID, from=uniqueUser2, to=1:length(uniqueUser2))
-  data2$OFFERID <- mapvalues(data2$OFFERID,from=uniqueOffer2,to=1:length(uniqueOffer2))
-  
-  
-  print("Amount of users")
-  print(length(uniqueUser2))
-  
-  #DATA PARTITIONING
-  intrain  <- createDataPartition(y=data2$CLICK,p=0.9,list=FALSE)
-  training2 <- data2[intrain,]
-  testing2  <- data2[-intrain,]
+  uniqueUser2 <- unique(training2$USERID)
+  uniqueOffer2 <- unique(training2$OFFERID)
+  training2$USERID  <- mapvalues(training2$USERID, from=uniqueUser2, to=1:length(uniqueUser2))
+  training2$OFFERID <- mapvalues(training2$OFFERID,from=uniqueOffer2,to=1:length(uniqueOffer2))
   
   #CREATE SPARSE MATRIX
-  X <- Incomplete(i = training2$USERID,
+  X <- sparseMatrix(i = training2$USERID,
                     j = training2$OFFERID,
                     x = training2$CLICK)
-  
   
   maxIter <- 100
   e <- 0.1
@@ -90,7 +85,7 @@ for(threshold in thresholds)
   count = 1
   for(l in lambda)
   {
-    result <- SoftImpute(X,l,maxIter,e,data2)
+    result <- SoftImpute(X,l,maxIter,e,training2)
     
     #Using package
     #SVD <- softImpute(X,maxit = 1000)
@@ -100,7 +95,7 @@ for(threshold in thresholds)
     
     #Construct 'new' Z.
    
-     result <- U%*%diag(D)%*%t(V)
+    result <- U%*%diag(D)%*%t(V)
     results[[count]] = result
     print("Found solution")
     count=count+1
@@ -111,7 +106,7 @@ for(threshold in thresholds)
   count = 1
   for(i in 1:length(results))
   {
-    MSEs[count] = MSE(results[[i]],testing,uniqueUser2,uniqueOffer2)
+    MSEs[count] = MSE(results[[i]],testing,uniqueUser2,uniqueOffer2,uniqueUsersInTrain)
     count = count +1
   }
   
