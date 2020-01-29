@@ -6,6 +6,7 @@ library(caret)
 library(plyr)
 library(data.table)
 library(softImpute)
+library(svd)
 
 
 #READ DATA
@@ -71,8 +72,8 @@ for(threshold in thresholds)
   print("Trying threshold")
   print(threshold)
   
-  selectedUsers    <- uniqueUsersInTrain[Clickrates>threshold]    #1 User IDS
-  nonselectedUsers <- uniqueUsersInTrain[Clickrates<=threshold]   #1 User IDS
+  selectedUsers    <- uniqueUsersTraining[Clickrates>threshold]    #1 User IDS
+  nonselectedUsers <- uniqueUsersTraining[Clickrates<=threshold]   #1 User IDS
   training2        <- training[.(selectedUsers)]
   training2star    <- training[.(nonselectedUsers)]
   
@@ -92,7 +93,7 @@ for(threshold in thresholds)
   
   maxIter <- 100
   e <- 1
-  lambda <-exp(-4)
+  lambda <-exp(-4:2)
   results<-list()
   count = 1
   for(l in lambda)

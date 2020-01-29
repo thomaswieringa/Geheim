@@ -35,9 +35,13 @@ MSE <- function(result,testing, uniqueUser2,uniqueUser2star,uniqueOffer2,allTrai
   predictions <-  result[cbind(validTest$USERID,validTest$OFFERID) ]
   SE1 <- (predictions-validTest$CLICK)^2
  
+  SE2 <- (nonvalidTest$CLICK-0)^2
+  
+  
+  
   #Error for non trained part
-  SE2 <- (0-nontrainedTest$CLICK)^2
-  SE <- c(SE1,SE2)
+  SE3 <- (0-nontrainedTest$CLICK)^2
+  SE <- c(SE1,SE2,SE3)
   MSE <- mean(SE)
   
   return(MSE)
