@@ -2,7 +2,6 @@ SoftImpute <- function(X,lambda,maxIter = 100,e,training)
 {
   #Create Initial Z matrix
   Zold <- matrix(0, nrow=nrow(X), ncol=ncol(X))
-
   
   #Loop untill maximum number of iterations
   for(iter in 1:maxIter)

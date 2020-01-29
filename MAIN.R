@@ -17,20 +17,29 @@ data<- as.data.table(data)
 data[,4]=(data[,4]*2)-1
 
 #DATA ID PREP
-uniqueUser <- unique(data$USERID)
-uniqueOffer <- unique(data$OFFERID)
+uniqueUser   <- unique(data$USERID)
+uniqueOffer  <- unique(data$OFFERID)
 data$USERID  <- mapvalues(data$USERID, from=uniqueUser, to=1:length(uniqueUser))
 data$OFFERID <- mapvalues(data$OFFERID,from=uniqueOffer,to=1:length(uniqueOffer))
-userIDs <- 1:length(uniqueUser)
+userIDs      <- 1:length(uniqueUser)
 
 #DATA PARTITIONING
-data$USERID <- as.factor(data$USERID)
-intrain <- createDataPartition(data$USERID, p = 0.7, list = F)
-data$USERID <- as.numeric(data$USERID)
-training <- as.data.table(data[intrain,])
-testing  <- as.data.table(data[-intrain,])
+data$USERID  <- as.factor(data$USERID)
+intrain      <- createDataPartition(data$USERID, p = 0.7, list = F)
+data$USERID  <- as.numeric(data$USERID)
+training     <- as.data.table(data[intrain,])
+testing      <- as.data.table(data[-intrain,])
 
-uniqueUsersInTrain <-  unique(training$USERID)
+setkey(data,USERID)
+setkey(training,USERID)
+setkey(testing,USERID)
+
+print(length(unique(training$USERID)))
+print(length(unique(testing$USERID)))
+
+uniqueUsersTraining <-  unique(training$USERID)
+testingOffers      <- unique(testing$OFFERID)
+
 
 
 #Create data.table index for fast access of data
@@ -62,14 +71,17 @@ for(threshold in thresholds)
   print("Trying threshold")
   print(threshold)
   
-  selectedUsers <- userIDs[Clickrates>threshold]
-  nonselectedUsers <- userIDs[Clickrates<=threshold]
+  selectedUsers    <- uniqueUsersInTrain[Clickrates>threshold]    #1 User IDS
+  nonselectedUsers <- uniqueUsersInTrain[Clickrates<=threshold]   #1 User IDS
   training2        <- training[.(selectedUsers)]
   training2star    <- training[.(nonselectedUsers)]
   
+ 
   #DATA ID PREP
-  uniqueUser2 <- unique(training2$USERID)
+  uniqueUser2  <- unique(training2$USERID)
+  uniqueUser2star <- unique(training2star$USERID)
   uniqueOffer2 <- unique(training2$OFFERID)
+  
   training2$USERID  <- mapvalues(training2$USERID, from=uniqueUser2, to=1:length(uniqueUser2))
   training2$OFFERID <- mapvalues(training2$OFFERID,from=uniqueOffer2,to=1:length(uniqueOffer2))
   
@@ -79,7 +91,7 @@ for(threshold in thresholds)
                     x = training2$CLICK)
   
   maxIter <- 100
-  e <- 0.1
+  e <- 1
   lambda <-exp(-4)
   results<-list()
   count = 1
@@ -92,10 +104,9 @@ for(threshold in thresholds)
     #U<- SVD$u
     #D<- SVD$d-l
     #V<- SVD$v
-    
     #Construct 'new' Z.
-   
-    result <- U%*%diag(D)%*%t(V)
+    #result <- U%*%diag(D)%*%t(V)
+    
     results[[count]] = result
     print("Found solution")
     count=count+1
@@ -106,7 +117,7 @@ for(threshold in thresholds)
   count = 1
   for(i in 1:length(results))
   {
-    MSEs[count] = MSE(results[[i]],testing,uniqueUser2,uniqueOffer2,uniqueUsersInTrain)
+    MSEs[count] = MSE(results[[i]],testing,uniqueUser2,uniqueUser2star,uniqueOffer2,uniqueUsersTraining,testingOffers)
     count = count +1
   }
   
