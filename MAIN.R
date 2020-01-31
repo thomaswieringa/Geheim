@@ -8,14 +8,15 @@ library(data.table)
 library(svd)
 library(ptycho)
 library(expm)
-
+library(pracma)
 
 
 #READ DATA
 #data <- read.csv("~/Documents/SunWeb/data2.csv", sep=";")
 #data <- read.csv("~/Desktop/Observations_Report kopie.csv", sep=";")
-data<- read.csv("~/Documents/Seminar master/Rscript/Geheim/data2.csv", sep=";")
-data<- as.data.table(data)
+#data<- read.csv("~/Documents/Seminar master/Rscript/Geheim/data2.csv", sep=";")
+data <- read.csv("~/Documents/Seminar master/Rscript/Data/Observations_Report.csv", sep=";")
+data <- as.data.table(data)
 
 #DATA RESCALE
 data[,4]=(data[,4]*2)-1
@@ -60,6 +61,8 @@ for(u in 1:length(uniqueUser))
     Clickrates[u] <-0
   }
 }
+
+
 
 #TRAINING CLICK RATES AND REMOVE FROM TESTING
 #thresholds  <- c(0.001,0.01,0.1,0.5,0.6,0.7,0.8,0.9)
