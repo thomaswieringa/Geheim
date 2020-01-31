@@ -104,18 +104,18 @@ for(threshold in thresholds)
     count=count+1
   }
   
- # print("started calculating MSE")
-  #MSEs <-0
-  #count = 1
-  #for(i in 1:length(results))
-  #{
-  #  MSEs[count] = MSE(results[[i]],testing,uniqueUser2,uniqueUser2star,uniqueOffer2,uniqueUsersTraining,testingOffers)
-  #  count = count +1
-  #}
+  print("started calculating MSE")
+  MSEs <-0
+  count = 1
+  for(i in 1:length(results))
+  {
+    MSEs[count] = MSE(results[[i]],testing,uniqueUser2,uniqueUser2star,uniqueOffer2,uniqueUsersTraining,testingOffers)
+    count = count +1
+  }
   
   print("MSE calculated")
   
-  #MSEresults[counter]=MSEs
+  MSEresults[counter]=MSEs
   counter <- counter+1
 }
 

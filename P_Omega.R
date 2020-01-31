@@ -1,7 +1,6 @@
 P_Omega <- function(A, B, data)
 {
-  
-  
+
   ivec <- data$USERID
   jvec <- data$OFFERID
   
