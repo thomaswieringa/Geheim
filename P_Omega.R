@@ -1,8 +1,21 @@
-P_Omega <- function(X, data)
+P_Omega <- function(A, B, data)
 {
 
-  Xinv <- Pinv(X,data)
-  X <- X-Xinv
+  Btrans <- t(B)
+  ivec <- data$USERID
+  jvec <- data$OFFERID
+  
+  Astar <- A[ivec,]
+  Bstar <- Btrans[jvec,]
+  
+  
+  predVec <- rowSums(Astar*Bstar)
+  
+  #CREATE SPARSE MATRIX
+  X <- sparseMatrix(i = ivec,
+                    j = jvec,
+                    x = predVec)
+  
   
   return(X)
 }
