@@ -95,33 +95,27 @@ for(threshold in thresholds)
   count = 1
   for(l in lambda)
   {
-    result <- SoftImpute(X,l,maxIter,e,training2)
     
-    #Using package
-    #SVD <- softImpute(X,maxit = 1000)
-    #U<- SVD$u
-    #D<- SVD$d-l
-    #V<- SVD$v
-    #Construct 'new' Z.
-    #result <- U%*%diag(D)%*%t(V)
+    result <- SoftImputeALS(X,l,maxIter,e,training2,4)
+    
     
     results[[count]] = result
     print("Found solution")
     count=count+1
   }
   
-  print("started calculating MSE")
-  MSEs <-0
-  count = 1
-  for(i in 1:length(results))
-  {
-    MSEs[count] = MSE(results[[i]],testing,uniqueUser2,uniqueUser2star,uniqueOffer2,uniqueUsersTraining,testingOffers)
-    count = count +1
-  }
+ # print("started calculating MSE")
+  #MSEs <-0
+  #count = 1
+  #for(i in 1:length(results))
+  #{
+  #  MSEs[count] = MSE(results[[i]],testing,uniqueUser2,uniqueUser2star,uniqueOffer2,uniqueUsersTraining,testingOffers)
+  #  count = count +1
+  #}
   
   print("MSE calculated")
   
-  MSEresults[counter]=MSEs
+  #MSEresults[counter]=MSEs
   counter <- counter+1
 }
 
