@@ -10,8 +10,9 @@ library(svd)
 
 
 #READ DATA
-data <- read.csv("~/Documents/SunWeb/data2.csv", sep=";")
+#data <- read.csv("~/Documents/SunWeb/data2.csv", sep=";")
 #data <- read.csv("~/Desktop/Observations_Report kopie.csv", sep=";")
+data<- read.csv("~/Documents/Seminar master/Rscript/Geheim/data2.csv", sep=";")
 data<- as.data.table(data)
 
 #DATA RESCALE
@@ -31,16 +32,12 @@ data$USERID  <- as.numeric(data$USERID)
 training     <- as.data.table(data[intrain,])
 testing      <- as.data.table(data[-intrain,])
 
-setkey(data,USERID)
-setkey(training,USERID)
-setkey(testing,USERID)
 
 print(length(unique(training$USERID)))
 print(length(unique(testing$USERID)))
 
 uniqueUsersTraining <-  unique(training$USERID)
 testingOffers      <- unique(testing$OFFERID)
-
 
 
 #Create data.table index for fast access of data
@@ -77,7 +74,7 @@ for(threshold in thresholds)
   training2        <- training[.(selectedUsers)]
   training2star    <- training[.(nonselectedUsers)]
   
- 
+  
   #DATA ID PREP
   uniqueUser2  <- unique(training2$USERID)
   uniqueUser2star <- unique(training2star$USERID)
