@@ -5,8 +5,10 @@ library(scales)
 library(caret)
 library(plyr)
 library(data.table)
-library(softImpute)
 library(svd)
+library(ptycho)
+library(expm)
+
 
 
 #READ DATA
@@ -62,7 +64,7 @@ for(u in 1:length(uniqueUser))
 #TRAINING CLICK RATES AND REMOVE FROM TESTING
 #thresholds  <- c(0.001,0.01,0.1,0.5,0.6,0.7,0.8,0.9)
 thresholds <- 0
-MSEresults <-0
+MSEresults <-list()
 counter <-1
 for(threshold in thresholds)
 {
@@ -109,13 +111,13 @@ for(threshold in thresholds)
   count = 1
   for(i in 1:length(results))
   {
-    MSEs[count] = MSE(results[[i]],testing,uniqueUser2,uniqueUser2star,uniqueOffer2,uniqueUsersTraining,testingOffers)
+    MSEs[count] = MSE(results[[i]][[1]],results[[i]][[2]],testing,uniqueUser2,uniqueUser2star,uniqueOffer2)
     count = count +1
   }
   
   print("MSE calculated")
   
-  MSEresults[counter]=MSEs
+  MSEresults[[counter]]=MSEs
   counter <- counter+1
 }
 

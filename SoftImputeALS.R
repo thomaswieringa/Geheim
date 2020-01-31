@@ -1,6 +1,3 @@
-library(ptycho)
-library(expm)
-
 SoftImputeALS <- function(X, lambda2, maxIter, e, training2, r)
 {
   m <- X@Dim[1]
@@ -25,7 +22,7 @@ SoftImputeALS <- function(X, lambda2, maxIter, e, training2, r)
     SVD1 <- svd(B_thilde%*%D)
     U_thilde <- SVD1$u
     D_thilde_sq <- diag(SVD1$d)
-    D_thilde <- sqrtm(D_thilde_sq)$B
+    D_thilde <- sqrtm(D_thilde_sq)
     V <- U_thilde
     D <- D_thilde
     B_new <- V%*%D
@@ -36,7 +33,7 @@ SoftImputeALS <- function(X, lambda2, maxIter, e, training2, r)
     SVD2 <- svd(A_thilde%*%D)
     U_thilde <- SVD2$u
     D_thilde_sq <- diag(SVD2$d)
-    D_thilde <- sqrtm(D_thilde_sq)$B
+    D_thilde <- sqrtm(D_thilde_sq)
     U <- U_thilde
     D <- D_thilde
     A_new <- U%*%D
