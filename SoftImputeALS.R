@@ -39,11 +39,12 @@ SoftImputeALS <- function(X, lambda2, maxIter, e, training2, r)
     A_new <- U%*%D
     
     #convergence
-    diffA <- norm(A_new-A, type = "F")^2/norm(A, type = "F")^2
-    print(paste0("Difference A:     ", diffA))
-    diffB <- norm(B_new-B, type = "F")^2/norm(B, type = "F")^2
-    print(paste0("Difference B:     ", diffB))
-    diff <- diffA+diffB
+    ABnew <- P_Omega(A_new,B_new,training2)
+    ABold <- P_Omega(A,B,training2)
+    
+    diff <- norm(ABnew-ABold, type = "F")^2/norm(ABold, type = "F")^2
+    print(paste0("Difference  :     ", diff))
+    
     
     if(diff< e)
     {
