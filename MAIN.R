@@ -14,8 +14,8 @@ library(pracma)
 #READ DATA
 #data <- read.csv("~/Documents/SunWeb/data2.csv", sep=";")
 #data <- read.csv("~/Desktop/Observations_Report kopie.csv", sep=";")
-#data<- read.csv("~/Documents/Seminar master/Rscript/Geheim/data2.csv", sep=";")
-data <- read.csv("~/Documents/Seminar master/Rscript/Data/Observations_Report.csv", sep=";")
+data<- read.csv("~/Documents/Seminar master/Rscript/Geheim/data2.csv", sep=";")
+#data <- read.csv("~/Documents/Seminar master/Rscript/Data/Observations_Report.csv", sep=";")
 data <- as.data.table(data)
 
 #DATA RESCALE
@@ -93,9 +93,9 @@ for(threshold in thresholds)
                     j = training2$OFFERID,
                     x = training2$CLICK)
   
-  maxIter <- 100
-  e <- 1
-  lambda <-exp(-4:2)
+  maxIter <- 1000
+  e <- 0.001
+  lambda <-1:7
   results<-list()
   count = 1
   for(l in lambda)
