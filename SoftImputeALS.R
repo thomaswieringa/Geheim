@@ -48,7 +48,16 @@ SoftImputeALS <- function(X, lambda2, maxIter, e, training2, r)
     if(diff< e)
     {
       print("Solution found")
-      return(list(A_new,B_new))
+      M <- (X-pAB)%*%V + A_new%*%D
+      SVD3 <- svd(M)
+      U_final <- SVD3$u
+      D_lambda <- SVD3$d-lambda2
+      D_final <- diag(D_lambda*(D_lambda>0))
+      R <- SVD3$v
+      V_final <- V%*%R
+      A_final <- U_final%*%D_final
+      B_final <- V_final%*%D_final
+      return(list(A_final,B_final))
     }
     A <- A_new
     B <- B_new
