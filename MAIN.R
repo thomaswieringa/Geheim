@@ -68,6 +68,7 @@ for(u in 1:length(uniqueUser))
 #thresholds  <- c(0.001,0.01,0.1,0.5,0.6,0.7,0.8,0.9)
 thresholds <- 0
 MSEresults <-list()
+RMSEresults <- list()
 counter <-1
 for(threshold in thresholds)
 {
@@ -95,13 +96,13 @@ for(threshold in thresholds)
   
   maxIter <- 1000
   e <- 0.001
-  lambda <-1:7
+  lambda <-1:8
   results<-list()
   count = 1
   for(l in lambda)
   {
     
-    result <- SoftImputeALS(X,l,maxIter,e,training2,4)
+    result <- SoftImputeALS(X,l,maxIter,e,training2,40)
     
     
     results[[count]] = result
@@ -121,6 +122,10 @@ for(threshold in thresholds)
   print("MSE calculated")
   
   MSEresults[[counter]]=MSEs
+  RMSEresults[[counter]] = sqrt(MSEresults[[counter]])
+  
+  print(RMSEresults[[counter]])
+  
   counter <- counter+1
 }
 
