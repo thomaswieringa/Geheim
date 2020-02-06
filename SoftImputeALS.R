@@ -5,9 +5,12 @@ SoftImputeALS <- function(X, lambda2, maxIter, e, training2, r)
   #Initialize matrices
   D <- diag(r)
   U <- createOrthogonalX(m,r)
-  V <- matrix(0, n, r)
+  V <- rbind(diag(1,r,r),matrix(0,n-r,r))
   A <- U%*%D
   B <- V%*%D
+  AB <- P_Omega(A,B,training2)
+  opt_old <-norm(X-AB, type = "F")^2+lambda2*(norm(A,type = "F")^2+norm(B,type = "F")^2)
+
   
   for (t in 1:maxIter) 
   {
@@ -39,17 +42,19 @@ SoftImputeALS <- function(X, lambda2, maxIter, e, training2, r)
     A_new <- U%*%D
     
     #convergence
-    ABnew <- P_Omega(A_new,B_new,training2)
-    ABold <- P_Omega(A,B,training2)
     
-    diff <- norm(ABnew-ABold, type = "F")^2/norm(ABold, type = "F")^2
+    AB_new <- P_Omega(A_new,B_new,training2)
+    
+    opt_new <- norm(X-AB_new, type = "F")^2+lambda2*(norm(A_new,type = "F")^2+norm(B_new,type = "F")^2)
+    
+    diff <- abs(opt_new-opt_old)/opt_old
     print(paste0("Difference  :     ", diff))
     
     
     if(diff< e)
     {
       print("Solution found")
-      M <- (X-pAB)%*%V + A_new%*%D
+      M <- (X-AB_new)%*%V + A_new%*%D
       SVD3 <- svd(M)
       U_final <- SVD3$u
       D_lambda <- SVD3$d-lambda2
@@ -62,6 +67,6 @@ SoftImputeALS <- function(X, lambda2, maxIter, e, training2, r)
     }
     A <- A_new
     B <- B_new
-    
+    opt_old <- opt_new
   }
 }
