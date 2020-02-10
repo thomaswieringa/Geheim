@@ -14,42 +14,48 @@ SoftImputeALS <- function(X, lambda2, maxIter, e, training2, r)
   
   for (t in 1:maxIter) 
   {
-    print(paste0("Current iteration:  ", t))
-    start_time <- Sys.time()
-    pAB <- P_Omega(A,B,training2)
-    end_time <- Sys.time()
-    print(end_time - start_time)
     
+    print(paste0("Current iteration:  ", t))
+
+    pAB <- P_Omega(A,B,training2)
+   
     #update B
     B_thilde <- t(inv(D%*%D+lambda2*diag(r))%*%t(A)%*%(X-pAB)+inv(D%*%D+lambda2*diag(r))%*%D%*%D%*%t(B))
+    
+    #update V & D
     SVD1 <- svd(B_thilde%*%D)
     U_thilde <- SVD1$u
     D_thilde_sq <- diag(SVD1$d)
-    D_thilde <- sqrtm(D_thilde_sq)$B
+    D_thilde <- sqrt(D_thilde_sq)
     V <- U_thilde
     D <- D_thilde
+    U <- U%*%SVD1$v
     B_new <- V%*%D
-    pAB <- P_Omega(A,B_new,training2)
+    A_new <- U%*%D
+    
+    pAB <- P_Omega(A_new,B_new,training2)
     
     #Update A
-    A_thilde <- t(inv(D%*%D+lambda2*diag(r))%*%t(B_new)%*%(t(X)-t(pAB))+inv(D%*%D+lambda2*diag(r))%*%D%*%D%*%t(A))
+    A_thilde <- t(inv(D%*%D+lambda2*diag(r))%*%t(B_new)%*%(t(X)-t(pAB))+inv(D%*%D+lambda2*diag(r))%*%D%*%D%*%t(A_new))
     SVD2 <- svd(A_thilde%*%D)
     U_thilde <- SVD2$u
     D_thilde_sq <- diag(SVD2$d)
-    D_thilde <- sqrtm(D_thilde_sq)$B
+    D_thilde <- sqrt(D_thilde_sq)
     U <- U_thilde
     D <- D_thilde
+    V <- V %*% SVD2$v
     A_new <- U%*%D
-    
+    B_new <- V%*%D
+   
     #convergence
-    
     AB_new <- P_Omega(A_new,B_new,training2)
     
-    opt_new <- norm(X-AB_new, type = "F")^2+lambda2*(norm(A_new,type = "F")^2+norm(B_new,type = "F")^2)
+    opt_new <- norm(X-AB_new, type = "F")^2+lambda2/2*(norm(A_new,type = "F")^2+norm(B_new,type = "F")^2)
     
     diff <- abs(opt_new-opt_old)/opt_old
     print(paste0("Difference  :     ", diff))
     
+    print(paste0("New Objective  :     ", opt_new))
     
     if(diff< e)
     {
@@ -70,3 +76,4 @@ SoftImputeALS <- function(X, lambda2, maxIter, e, training2, r)
     opt_old <- opt_new
   }
 }
+

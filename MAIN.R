@@ -12,9 +12,14 @@ library(pracma)
 
 
 #READ DATA
-#data <- read.csv("~/Documents/SunWeb/data2.csv", sep=";")
+#full data thomas
+#data <- read.csv("~/Documents/SunWeb/Observations_Report.csv", sep=";")
+#subset thomas
+data  <- read.csv("~/Documents/SunWeb/data2.csv", sep=";")
+
+#LUDO DINGEN
 #data <- read.csv("~/Desktop/Observations_Report kopie.csv", sep=";")
-data<- read.csv("~/Documents/Seminar master/Rscript/Geheim/data2.csv", sep=";")
+#data <- read.csv("~/Documents/Seminar master/Rscript/Geheim/data2.csv", sep=";")
 #data <- read.csv("~/Documents/Seminar master/Rscript/Data/Observations_Report.csv", sep=";")
 data <- as.data.table(data)
 
@@ -49,19 +54,12 @@ setkey(testing, USERID)
 setkey(data, USERID)
 
 #Calculate clickrate for every User in training set
-Clickrates <- 0
-for(u in 1:length(uniqueUser))
-{
-  userclicks <- training[.(u)]
-  click <- sum(userclicks$CLICK == 1)
-  nonclick <- sum(userclicks$CLICK == -1)
-  Clickrates[u] <- click/(click+nonclick)
-  if(is.na(Clickrates[u]))
-  {
-    Clickrates[u] <-0
-  }
-}
-
+#Calculate them
+#Clickrates <- calcClickRates(uniqueUser, training)
+#fullset Thomas
+#Clickrates <- read.csv2("~/Documents/SunWeb/clickrate.csv", header=FALSE, sep="")
+#subset Thomas
+Clickrates <- read.csv2("~/Documents/SunWeb/data2cr.csv", header=FALSE, sep="")
 
 
 #TRAINING CLICK RATES AND REMOVE FROM TESTING
@@ -82,9 +80,9 @@ for(threshold in thresholds)
   
   
   #DATA ID PREP
-  uniqueUser2  <- unique(training2$USERID)
+  uniqueUser2     <- unique(training2$USERID)
   uniqueUser2star <- unique(training2star$USERID)
-  uniqueOffer2 <- unique(training2$OFFERID)
+  uniqueOffer2    <- unique(training2$OFFERID)
   
   training2$USERID  <- mapvalues(training2$USERID, from=uniqueUser2, to=1:length(uniqueUser2))
   training2$OFFERID <- mapvalues(training2$OFFERID,from=uniqueOffer2,to=1:length(uniqueOffer2))
@@ -97,14 +95,12 @@ for(threshold in thresholds)
   maxIter <- 1000
   e <- 0.001
   lambda <-1:8
+  r<-40
   results<-list()
   count = 1
   for(l in lambda)
   {
-    
-    result <- SoftImputeALS(X,l,maxIter,e,training2,40)
-    
-    
+    result <- SoftImputeALS(X,l,maxIter,e,training2,r)
     results[[count]] = result
     print("Found solution")
     count=count+1
@@ -120,7 +116,6 @@ for(threshold in thresholds)
   }
   
   print("MSE calculated")
-  
   MSEresults[[counter]]=MSEs
   RMSEresults[[counter]] = sqrt(MSEresults[[counter]])
   
