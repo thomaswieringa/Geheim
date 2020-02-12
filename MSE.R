@@ -2,7 +2,7 @@ MSE <- function(A,B,testing, uniqueUser2,uniqueUser2star,uniqueOffer2)
 {
   #rescale data
   scaledTesting     <-  testing
-  scaledTesting[,4] <-  (scaledTesting[,4]+1)/2
+  #scaledTesting[,4] <-  (scaledTesting[,4]+1)/2
   
   setkey(scaledTesting,USERID)
 
@@ -32,12 +32,15 @@ MSE <- function(A,B,testing, uniqueUser2,uniqueUser2star,uniqueOffer2)
   validTest$USERID  <- mapvalues(validTest$USERID,from=uniqueUser2, to=1:length(uniqueUser2))
   validTest$OFFERID <- mapvalues(validTest$OFFERID, from=uniqueOffer2,to=1:length(uniqueOffer2))
   
-  predictions <-  (predictions(A,B,validTest)+1)/2
-  
+  #predictions <-  (predictions(A,B,validTest)+1)/2
+  predictions <-  predictions(A,B,validTest)
+ 
   SE1 <- (predictions-validTest$CLICK)^2
+  print("RMSE1")
+  print(sqrt(mean(SE1)))
  
   SE2 <- (0-nonvalidTest$CLICK)^2
-  
+
   #Error for non trained part
   SE3 <- (0-nontrainedTest$CLICK)^2
   SE <- c(SE1,SE2,SE3)
@@ -45,3 +48,4 @@ MSE <- function(A,B,testing, uniqueUser2,uniqueUser2star,uniqueOffer2)
   
   return(MSE)
 }
+

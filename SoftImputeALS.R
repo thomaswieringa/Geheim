@@ -29,9 +29,10 @@ SoftImputeALS <- function(X, lambda2, maxIter, e, training2, r)
     D_thilde <- sqrt(D_thilde_sq)
     V <- U_thilde
     D <- D_thilde
-    U <- U%*%SVD1$v
     B_new <- V%*%D
     A_new <- U%*%D
+    U <- U%*%SVD1$v
+    
     
     pAB <- P_Omega(A_new,B_new,training2)
     
@@ -43,37 +44,28 @@ SoftImputeALS <- function(X, lambda2, maxIter, e, training2, r)
     D_thilde <- sqrt(D_thilde_sq)
     U <- U_thilde
     D <- D_thilde
-    V <- V %*% SVD2$v
     A_new <- U%*%D
     B_new <- V%*%D
+    V <- V %*% SVD2$v
    
     #convergence
     AB_new <- P_Omega(A_new,B_new,training2)
-    
-    opt_new <- norm(X-AB_new, type = "F")^2+lambda2/2*(norm(A_new,type = "F")^2+norm(B_new,type = "F")^2)
+    opt_new <- norm(X-AB_new, type = "F")^2+lambda2*(norm(A_new,type = "F")^2+norm(B_new,type = "F")^2)
     
     diff <- abs(opt_new-opt_old)/opt_old
     print(paste0("Difference  :     ", diff))
     
     print(paste0("New Objective  :     ", opt_new))
     
-    if(diff< e)
+    if(diff< e || t == maxIter)
     {
       print("Solution found")
-      M <- (X-AB_new)%*%V + A_new%*%D
-      SVD3 <- svd(M)
-      U_final <- SVD3$u
-      D_lambda <- SVD3$d-lambda2
-      D_final <- diag(D_lambda*(D_lambda>0))
-      R <- SVD3$v
-      V_final <- V%*%R
-      A_final <- U_final%*%D_final
-      B_final <- V_final%*%D_final
-      return(list(A_final,B_final))
+      return(list(A_new,B_new))
     }
     A <- A_new
     B <- B_new
     opt_old <- opt_new
   }
+ 
 }
 
