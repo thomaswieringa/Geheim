@@ -12,51 +12,10 @@ library(pracma)
 
 
 #READ DATA
-#small test set
-
-data <- c(101,1,10,0)
-# for(i in 1:70)
-# {
-#   for(j in 1:10)
-#   {
-#     if(runif(1, min = 0, max = 1) >0.7)
-#     {
-#       if(runif(1, min = 0, max = 1) >0.6)
-#       {
-#         row <- c(i,1,j,1)
-#         data <- rbind(data,row)
-#       }
-#       else
-#       {
-#         row <- c(i,1,j,0)
-#         data <- rbind(data,row)
-#       }
-#     }
-#   }
-# }
-for(i in 1:100)
-{
-  for(j in 1:3)
-  {
-    
-    row <- c(i,1,j,1)
-    data <- rbind(data,row)
-    
-  }
-  for(j in 2:4*2)
-  {
-    row <- c(i,1,j,0)
-    data <- rbind(data,row)
-  }
-}
-
-colnames(data) <- c("USERID", "MAILID", "OFFERID","CLICK")
-
-
 #full data thomas
 #data <- read.csv("~/Documents/SunWeb/Observations_Report.csv", sep=";")
 #subset thomas
-#data  <- read.csv("~/Documents/SunWeb/data2.csv", sep=";")
+data  <- read.csv("~/Documents/SunWeb/data2.csv", sep=";")
 
 #LUDO DINGEN
 #data <- read.csv("~/Desktop/Observations_Report kopie.csv", sep=";")
@@ -66,8 +25,7 @@ colnames(data) <- c("USERID", "MAILID", "OFFERID","CLICK")
 
 data <- as.data.table(data)
 
-#DATA RESCALE
-#data[,4]=(data[,4]*2)-1
+
 
 #DATA ID PREP
 uniqueUser   <- unique(data$USERID)
@@ -84,6 +42,10 @@ training     <- as.data.table(data[intrain,])
 testing      <- as.data.table(data[-intrain,])
 
 
+print(mean(training$CLICK))
+print(mean(testing$CLICK))
+
+
 print(length(unique(training$USERID)))
 print(length(unique(testing$USERID)))
 
@@ -98,18 +60,17 @@ setkey(data, USERID)
 
 #Calculate clickrate for every User in training set
 #Calculate them
-Clickrates <- calcClickRates(uniqueUser, training)
+#Clickrates <- calcClickRates(uniqueUser, training)
 #fullset Thomas
 #Clickrates <- read.csv2("~/Documents/SunWeb/clickrate.csv", header=FALSE, sep="")
 #subset Thomas
-#Clickrates <- read.csv2("~/Documents/SunWeb/data2cr.csv", header=FALSE, sep="")
+Clickrates <- read.csv2("~/Documents/SunWeb/data2cr.csv", header=FALSE, sep="")
 
 
 #TRAINING CLICK RATES AND REMOVE FROM TESTING
 #thresholds  <- c(0.001,0.01,0.1,0.5,0.6,0.7,0.8,0.9)
-thresholds <- 0
-MSEresults <-list()
-RMSEresults <- list()
+thresholds <- 0.1
+MAEresults <-list()
 counter <-1
 for(threshold in thresholds)
 {
@@ -136,9 +97,9 @@ for(threshold in thresholds)
                     x = training2$CLICK)
   
   maxIter <- 1000
-  e <- 0.0000000001
-  lambda <-1:10
-  r<-5
+  e <- 0.01
+  lambda <-0
+  r<-40
   results<-list()
   count = 1
   for(l in lambda)
@@ -149,23 +110,22 @@ for(threshold in thresholds)
     count=count+1
   }
   
-  print("started calculating MSE")
-  MSEs <-0
+  print("started calculating MAE")
+  MAEs <-0
   count = 1
   for(i in 1:length(results))
   {
-    MSEs[count] = MSE(results[[i]][[1]],results[[i]][[2]],testing,uniqueUser2,uniqueUser2star,uniqueOffer2)
+    MAEs[count] = MAE(results[[i]][[1]],results[[i]][[2]],testing,uniqueUser2,uniqueUser2star,uniqueOffer2)
     count = count +1
   }
   
-  print("MSE calculated")
-  MSEresults[[counter]]=MSEs
-  RMSEresults[[counter]] = sqrt(MSEresults[[counter]])
-  
-  print(RMSEresults[[counter]])
+  print("MAE calculated")
+  MAEresults[[counter]]=MAEs
+  print(MAEresults[[counter]])
   
   counter <- counter+1
 }
+
 
 
 

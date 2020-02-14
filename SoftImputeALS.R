@@ -3,69 +3,62 @@ SoftImputeALS <- function(X, lambda2, maxIter, e, training2, r)
   m <- X@Dim[1]
   n <- X@Dim[2]
   #Initialize matrices
-  D <- diag(r)
-  U <- createOrthogonalX(m,r)
-  V <- rbind(diag(1,r,r),matrix(0,n-r,r))
-  A <- U%*%D
-  B <- V%*%D
-  AB <- P_Omega(A,B,training2)
-  opt_old <-norm(X-AB, type = "F")^2+lambda2*(norm(A,type = "F")^2+norm(B,type = "F")^2)
-
+  V=matrix(0,n,r)
+  U=matrix(rnorm(m*r),m,r)
+  U=svd(U)$u
+  Dsq=rep(1,r)
   
   for (t in 1:maxIter) 
   {
-    
     print(paste0("Current iteration:  ", t))
-
-    pAB <- P_Omega(A,B,training2)
-   
-    #update B
-    B_thilde <- t(inv(D%*%D+lambda2*diag(r))%*%t(A)%*%(X-pAB)+inv(D%*%D+lambda2*diag(r))%*%D%*%D%*%t(B))
+    
+    U_old=U
+    V_old=V
+    Dsq_old=Dsq
+    D <- diag(sqrt(Dsq))
+    
+    #B step
+    pAB <- P_Omega(U%*%D,V%*%D,training2)
+    B_thilde=(t(U)%*%(X-pAB)) + diag(Dsq)%*%t(V)
+    B_thilde=B_thilde*(sqrt(Dsq)/(Dsq+lambda2))
+    
     
     #update V & D
-    SVD1 <- svd(B_thilde%*%D)
-    U_thilde <- SVD1$u
-    D_thilde_sq <- diag(SVD1$d)
-    D_thilde <- sqrt(D_thilde_sq)
-    V <- U_thilde
-    D <- D_thilde
-    B_new <- V%*%D
-    A_new <- U%*%D
+    SVD1 <- svd(t(B_thilde))
+    V <- SVD1$u
+    Dsq <- SVD1$d
     U <- U%*%SVD1$v
+    D <- diag(sqrt(Dsq))
+    pAB <- P_Omega(U%*%D,V%*%D,training2)
     
+    #obj=(.5*sum( (xfill-xhat)[!xnas]^2)+lambda*sum(Dsq))/nz
+    obj =1
     
-    pAB <- P_Omega(A_new,B_new,training2)
+    # V step
+    A_thilde <- t(V)%*%(t(X)-t(pAB)) + diag(Dsq)%*%t(U)
+    A_thilde <- A_thilde*(sqrt(Dsq)/(Dsq+lambda2))
+    SVD2 <- svd(t(A_thilde))
+    U    <- SVD2$u
+    Dsq  <- SVD2$d
+    V    <- V%*%SVD2$v
+    pAB <- P_Omega(U%*%diag(Dsq),V%*%diag(Dsq),training2)
     
-    #Update A
-    A_thilde <- t(inv(D%*%D+lambda2*diag(r))%*%t(B_new)%*%(t(X)-t(pAB))+inv(D%*%D+lambda2*diag(r))%*%D%*%D%*%t(A_new))
-    SVD2 <- svd(A_thilde%*%D)
-    U_thilde <- SVD2$u
-    D_thilde_sq <- diag(SVD2$d)
-    D_thilde <- sqrt(D_thilde_sq)
-    U <- U_thilde
-    D <- D_thilde
-    A_new <- U%*%D
-    B_new <- V%*%D
-    V <- V %*% SVD2$v
-   
-    #convergence
-    AB_new <- P_Omega(A_new,B_new,training2)
-    opt_new <- norm(X-AB_new, type = "F")^2+lambda2*(norm(A_new,type = "F")^2+norm(B_new,type = "F")^2)
+    ratio=Frob(U_old,Dsq_old,V_old,U,Dsq,V)
+    cat(t, ":", "obj",format(round(obj,5)),"ratio", ratio, "\n")
     
-    diff <- abs(opt_new-opt_old)/opt_old
-    print(paste0("Difference  :     ", diff))
-    
-    print(paste0("New Objective  :     ", opt_new))
-    
-    if(diff< e || t == maxIter)
+    if(ratio< e || t == maxIter)
     {
       print("Solution found")
-      return(list(A_new,B_new))
+      
+      U <- (X-pAB)%*%V + U 
+      sU=svd(U)
+      U=sU$u
+      Dsq=sU$d
+      V=V%*%sU$v
+      Dsq=pmax(Dsq-lambda2,0)
+      D <- diag(sqrt(Dsq))
+      return(list(U%*%D,V%*%D))
     }
-    A <- A_new
-    B <- B_new
-    opt_old <- opt_new
   }
- 
 }
 
