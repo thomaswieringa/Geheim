@@ -14,8 +14,9 @@ library(pracma)
 #READ DATA
 #full data thomas
 #data <- read.csv("~/Documents/SunWeb/Observations_Report.csv", sep=";")
+data <- read.csv("~/Desktop/Observations_Report.csv", sep=";")
 #subset thomas
-data  <- read.csv("~/Documents/SunWeb/data2.csv", sep=";")
+#data  <- read.csv("~/Documents/SunWeb/data2.csv", sep=";")
 
 #LUDO DINGEN
 #data <- read.csv("~/Desktop/Observations_Report kopie.csv", sep=";")
@@ -62,14 +63,14 @@ setkey(data, USERID)
 #Calculate them
 #Clickrates <- calcClickRates(uniqueUser, training)
 #fullset Thomas
-#Clickrates <- read.csv2("~/Documents/SunWeb/clickrate.csv", header=FALSE, sep="")
+Clickrates <- read.csv2("~/Documents/SunWeb/clickrate.csv", header=FALSE, sep="")
 #subset Thomas
-Clickrates <- read.csv2("~/Documents/SunWeb/data2cr.csv", header=FALSE, sep="")
+#Clickrates <- read.csv2("~/Documents/SunWeb/data2cr.csv", header=FALSE, sep="")
 
 
 #TRAINING CLICK RATES AND REMOVE FROM TESTING
 #thresholds  <- c(0.001,0.01,0.1,0.5,0.6,0.7,0.8,0.9)
-thresholds <- 0.1
+thresholds <- c(0,0.01,0.02,0.03,0.05,0.08,0.1,0.2,0.3,0.5)
 MAEresults <-list()
 counter <-1
 for(threshold in thresholds)
@@ -96,7 +97,7 @@ for(threshold in thresholds)
                     j = training2$OFFERID,
                     x = training2$CLICK)
   
-  maxIter <- 1000
+  maxIter <- 100
   e <- 0.01
   lambda <-0
   r<-40
