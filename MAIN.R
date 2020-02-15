@@ -70,7 +70,7 @@ Clickrates <- read.csv2("~/Documents/SunWeb/clickrate.csv", header=FALSE, sep=""
 
 #TRAINING CLICK RATES AND REMOVE FROM TESTING
 #thresholds  <- c(0.001,0.01,0.1,0.5,0.6,0.7,0.8,0.9)
-thresholds <- c(0,0.01,0.02,0.03,0.05,0.08,0.1,0.2,0.3,0.5)
+thresholds <- 0
 MAEresults <-list()
 counter <-1
 for(threshold in thresholds)
@@ -98,9 +98,9 @@ for(threshold in thresholds)
                     x = training2$CLICK)
   
   maxIter <- 100
-  e <- 0.01
+  e <- 0.001
   lambda <-0
-  r<-40
+  r<-10
   results<-list()
   count = 1
   for(l in lambda)
