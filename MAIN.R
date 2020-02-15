@@ -70,7 +70,7 @@ Clickrates <- read.csv2("~/Documents/SunWeb/clickrate.csv", header=FALSE, sep=""
 
 #TRAINING CLICK RATES AND REMOVE FROM TESTING
 #thresholds  <- c(0.001,0.01,0.1,0.5,0.6,0.7,0.8,0.9)
-thresholds <- 0
+thresholds <- 0:10/20
 MAEresults <-list()
 counter <-1
 for(threshold in thresholds)
@@ -98,15 +98,17 @@ for(threshold in thresholds)
                     x = training2$CLICK)
   
   maxIter <- 100
-  e <- 0.001
-  lambda <-0
-  r<-10
+  e <- 0.0001
+  lambda <-c(exp(4:0),0)
+  r<-20
   results<-list()
   count = 1
   for(l in lambda)
   {
     result <- SoftImputeALS(X,l,maxIter,e,training2,r)
-    results[[count]] = result
+    write.csv(result[[1]],file = paste0("A","cr",threshold,"r",r,"l",l),row.names = FALSE,col.names = FALSE)
+    write.csv(result[[2]],file = paste0("B","cr",threshold,"r",r,"l",l),row.names = FALSE,col.names = FALSE)
+    #results[[count]] = result
     print("Found solution")
     count=count+1
   }
@@ -121,8 +123,9 @@ for(threshold in thresholds)
   }
   
   print("MAE calculated")
-  MAEresults[[counter]]=MAEs
-  print(MAEresults[[counter]])
+  #MAEresults[[counter]]=MAEs
+  write.csv(MAEs,file = paste0("MAE","cr",threshold,"r",r,"l",l),row.names = FALSE,col.names = FALSE)
+  #print(MAEresults[[counter]])
   
   counter <- counter+1
 }
