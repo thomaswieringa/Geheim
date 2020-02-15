@@ -106,8 +106,8 @@ for(threshold in thresholds)
   for(l in lambda)
   {
     result <- SoftImputeALS(X,l,maxIter,e,training2,r)
-    write.csv(result[[1]],file = paste0("A","cr",threshold,"r",r,"l",l),row.names = FALSE,col.names = FALSE)
-    write.csv(result[[2]],file = paste0("B","cr",threshold,"r",r,"l",l),row.names = FALSE,col.names = FALSE)
+    write.csv(result[[1]],file = paste0("A","cr",threshold,"r",r,"l",round(l,2),".csv"),row.names = FALSE,col.names = FALSE)
+    write.csv(result[[2]],file = paste0("B","cr",threshold,"r",r,"l",round(l,2),".csv"),row.names = FALSE,col.names = FALSE)
     #results[[count]] = result
     print("Found solution")
     count=count+1
@@ -124,7 +124,7 @@ for(threshold in thresholds)
   
   print("MAE calculated")
   #MAEresults[[counter]]=MAEs
-  write.csv(MAEs,file = paste0("MAE","cr",threshold,"r",r,"l",l),row.names = FALSE,col.names = FALSE)
+  write.csv(MAEs,file = paste0("MAE","cr",threshold,"r",r,"l",round(l,2),".csv"),row.names = FALSE,col.names = FALSE)
   #print(MAEresults[[counter]])
   
   counter <- counter+1
