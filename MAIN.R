@@ -70,19 +70,17 @@ Clickrates <- read.csv2("~/Documents/SunWeb/clickrate.csv", header=FALSE, sep=""
 
 #TRAINING CLICK RATES AND REMOVE FROM TESTING
 #thresholds  <- c(0.001,0.01,0.1,0.5,0.6,0.7,0.8,0.9)
-thresholds <- 0:10/20
-MAEresults <-list()
-counter <-1
+
+
+thresholds <- 0
 for(threshold in thresholds)
 {
-  print("Trying threshold")
-  print(threshold)
-  
   selectedUsers    <- uniqueUsersTraining[Clickrates>threshold]    #1 User IDS
   nonselectedUsers <- uniqueUsersTraining[Clickrates<=threshold]   #1 User IDS
   training2        <- training[.(selectedUsers)]
   training2star    <- training[.(nonselectedUsers)]
-  
+
+  print(length(unique(training2$USERID)))
   
   #DATA ID PREP
   uniqueUser2     <- unique(training2$USERID)
@@ -92,44 +90,39 @@ for(threshold in thresholds)
   training2$USERID  <- mapvalues(training2$USERID, from=uniqueUser2, to=1:length(uniqueUser2))
   training2$OFFERID <- mapvalues(training2$OFFERID,from=uniqueOffer2,to=1:length(uniqueOffer2))
   
-  #CREATE SPARSE MATRIX
-  X <- sparseMatrix(i = training2$USERID,
-                    j = training2$OFFERID,
-                    x = training2$CLICK)
-  
-  maxIter <- 100
-  e <- 0.0001
   lambda <-c(exp(4:0),0)
-  r<-20
-  results<-list()
-  count = 1
   for(l in lambda)
   {
-    result <- SoftImputeALS(X,l,maxIter,e,training2,r)
-    write.csv(result[[1]],file = paste0("A","cr",threshold,"r",r,"l",round(l,2),".csv"),row.names = FALSE,col.names = FALSE)
-    write.csv(result[[2]],file = paste0("B","cr",threshold,"r",r,"l",round(l,2),".csv"),row.names = FALSE,col.names = FALSE)
-    #results[[count]] = result
-    print("Found solution")
-    count=count+1
+    folds <- createFolds(training2$USERID, 5)
+    for(fold in folds)
+    {
+      data.training   <- training2[-fold] 
+      data.validation <- training2[fold]
+      uniqueUser     <- unique(data.training$USERID)
+      uniqueOffer    <- unique(data.training$OFFERID)
+      
+      data.training$USERID  <- mapvalues(data.training$USERID, from=uniqueUser, to=1:length(uniqueUser))
+      data.training$OFFERID <- mapvalues(data.training$OFFERID,from=uniqueOffer,to=1:length(uniqueOffer))
+      data.validation$USERID  <- mapvalues(data.validation$USERID, from=uniqueUser, to=1:length(uniqueUser))
+      data.validation$OFFERID <- mapvalues(data.validation$OFFERID,from=uniqueOffer,to=1:length(uniqueOffer))
+      
+      X <- sparseMatrix(i = data.training$USERID, j = data.training$OFFERID, x = data.training$CLICK)
+      
+      maxIter <- 100
+      e <- 0.0001
+      r<-20
+      result <- SoftImputeALS(X,l,maxIter,e,data.training,r)
+      write.csv(result[[1]],file = paste0("A","cr",threshold,"r",r,"l",round(l,2),".csv"),row.names = FALSE,col.names = FALSE)
+      write.csv(result[[2]],file = paste0("B","cr",threshold,"r",r,"l",round(l,2),".csv"),row.names = FALSE,col.names = FALSE)
+      print("Found solution")
+      print("started calculating MAE")
+      MAE = MAE(result[[1]],result[[2]],data.validation,uniqueUser2,uniqueUser2star,uniqueOffer2)
+      print("MAE calculated")
+      print(MAE)
+      
+      
+    }
   }
-  
-  print("started calculating MAE")
-  MAEs <-0
-  count = 1
-  for(i in 1:length(results))
-  {
-    MAEs[count] = MAE(results[[i]][[1]],results[[i]][[2]],testing,uniqueUser2,uniqueUser2star,uniqueOffer2)
-    count = count +1
-  }
-  
-  print("MAE calculated")
-  #MAEresults[[counter]]=MAEs
-  write.csv(MAEs,file = paste0("MAE","cr",threshold,"r",r,"l",round(l,2),".csv"),row.names = FALSE,col.names = FALSE)
-  #print(MAEresults[[counter]])
-  
-  counter <- counter+1
 }
-
-
 
 
