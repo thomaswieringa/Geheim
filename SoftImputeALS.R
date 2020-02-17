@@ -22,7 +22,6 @@ SoftImputeALS <- function(X, lambda2, maxIter, e, training2, r)
     B_thilde=(t(U)%*%(X-pAB)) + Dsq*t(V)
     B_thilde=B_thilde*(sqrt(Dsq)/(Dsq+lambda2))
     
-    
     #update V & D
     SVD1 <- svd(t(B_thilde))
     V <- SVD1$u
@@ -31,9 +30,7 @@ SoftImputeALS <- function(X, lambda2, maxIter, e, training2, r)
     U <- U%*%SVD1$v
     pAB <- P_Omega(t(t(U)*D),t(t(V)*D),training2)
     
-    #obj=(.5*sum( (xfill-xhat)[!xnas]^2)+lambda*sum(Dsq))/nz
-    obj =1
-    
+  
     #A step
     A_thilde <- t(V)%*%(t(X)-t(pAB)) + Dsq*t(U)
     A_thilde <- A_thilde*(sqrt(Dsq)/(Dsq+lambda2))
@@ -47,13 +44,13 @@ SoftImputeALS <- function(X, lambda2, maxIter, e, training2, r)
     pAB <- P_Omega(t(t(U)*D),t(t(V)*D),training2)
     
     ratio=Frob(U_old,Dsq_old,V_old,U,Dsq,V)
-    cat(t, ":", "obj",format(round(obj,5)),"ratio", ratio, "\n")
+    cat(t, ":","ratio", ratio, "\n")
     
     if(ratio< e || t == maxIter)
     {
       print("Solution found")
       
-      U   <- (X-pAB)%*%V + U 
+      U   <- (X-pAB)%*%V + t(t(U)*Dsq) 
       sU  <-svd(U)
       U   <-sU$u
       Dsq <-sU$d
