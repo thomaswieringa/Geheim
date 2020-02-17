@@ -26,8 +26,6 @@ data  <- read.csv("~/Documents/SunWeb/data2.csv", sep=";")
 
 data <- as.data.table(data)
 
-
-
 #DATA ID PREP
 uniqueUser   <- unique(data$USERID)
 uniqueOffer  <- unique(data$OFFERID)
@@ -112,8 +110,8 @@ for(threshold in thresholds)
     for(l in lambda)
     {
       result <- SoftImputeALS(X,l,maxIter,e,training2,r)
-      write.csv(result[[1]],file = paste0("A","cr",threshold,"r",r,"l",round(l,2),".csv"),row.names = FALSE)
-      write.csv(result[[2]],file = paste0("B","cr",threshold,"r",r,"l",round(l,2),".csv"),row.names = FALSE)
+      write.csv(result[[1]],file = paste0("A","cr",threshold,"fold",fold,"l",round(l,2),".csv"),row.names = FALSE)
+      write.csv(result[[2]],file = paste0("B","cr",threshold,"fold",fold, "l",round(l,2),".csv"),row.names = FALSE)
       print("Found solution")
       MAEs[count] = MAE(result[[1]],result[[2]],testing,uniqueUser2,uniqueUser2star,uniqueOffer2)
       count = count + 1
@@ -123,8 +121,9 @@ for(threshold in thresholds)
   }
   
   foldedMAE <- rowMeans(MAEsfoldMatrix)
-  print("writing MAE jooooooooo")
+  MSEresults[[counter]] = foldedMAE
   write.csv(foldedMAE,file = paste0("MAE","cr",threshold,"csv"),row.names = FALSE)
+  counter = counter + 1
   
 }
 
