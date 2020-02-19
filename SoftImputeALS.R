@@ -1,11 +1,13 @@
-SoftImputeALS <- function(X, lambda2, maxIter, e, training2, r)
+SoftImputeALS <- function(X, lambda2, maxIter, e, training3, r)
 {
+  set.seed(12)
+  
   m <- X@Dim[1]
   n <- X@Dim[2]
   #Initialize matrices
-  V=matrix(0,n,r)
-  U=matrix(rnorm(m*r),m,r)
-  U=svd(U)$u
+  V =matrix(0,n,r)
+  U =matrix(rnorm(m*r),m,r)
+  U =svd(U)$u
   Dsq=rep(1,r)
   
   for (t in 1:maxIter) 
@@ -18,9 +20,9 @@ SoftImputeALS <- function(X, lambda2, maxIter, e, training2, r)
     D <- sqrt(Dsq) 
     
     #B step
-    pAB <- P_Omega(t(t(U)*D),t(t(V)*D),training2)
-    B_thilde=(t(U)%*%(X-pAB)) + Dsq*t(V)
-    B_thilde=B_thilde*(sqrt(Dsq)/(Dsq+lambda2))
+    pAB <- P_Omega(t(t(U)*D),t(t(V)*D),training3)
+    B_thilde <- (t(U)%*%(X-pAB)) + Dsq*t(V)
+    B_thilde <- B_thilde*(sqrt(Dsq)/(Dsq+lambda2))
     
     #update V & D
     SVD1 <- svd(t(B_thilde))
@@ -28,7 +30,7 @@ SoftImputeALS <- function(X, lambda2, maxIter, e, training2, r)
     Dsq <- SVD1$d
     D <- sqrt(Dsq)
     U <- U%*%SVD1$v
-    pAB <- P_Omega(t(t(U)*D),t(t(V)*D),training2)
+    pAB <- P_Omega(t(t(U)*D),t(t(V)*D),training3)
     
   
     #A step
@@ -41,7 +43,7 @@ SoftImputeALS <- function(X, lambda2, maxIter, e, training2, r)
     Dsq  <- SVD2$d
     D    <- sqrt(Dsq)
     V    <- V%*%SVD2$v
-    pAB <- P_Omega(t(t(U)*D),t(t(V)*D),training2)
+    pAB <- P_Omega(t(t(U)*D),t(t(V)*D),training3)
     
     ratio=Frob(U_old,Dsq_old,V_old,U,Dsq,V)
     cat(t, ":","ratio", ratio, "\n")

@@ -32,9 +32,15 @@ data$USERID  <- mapvalues(data$USERID, from=uniqueUser, to=1:length(uniqueUser))
 data$OFFERID <- mapvalues(data$OFFERID,from=uniqueOffer,to=1:length(uniqueOffer))
 userIDs      <- 1:length(uniqueUser)
 
-#create 5 partitions
+#create 3 partitions
 data$USERID  <- as.factor(data$USERID)
-intrain <- createDataPartition(data$USERID, p = 0.7, list =F, times = 5)
+intrain <- list()
+set.seed(12)
+intrain[[1]]   <- createDataPartition(data$USERID, p = 0.7, list =F)
+set.seed(5343)
+intrain[[2]]   <- createDataPartition(data$USERID, p = 0.7, list =F)
+set.seed(6728)
+intrain[[3]]   <- createDataPartition(data$USERID, p = 0.7, list =F)
 data$USERID  <- as.numeric(data$USERID)
 
 
@@ -47,40 +53,22 @@ data$USERID  <- as.numeric(data$USERID)
 Clickrates <- read.csv2("~/Documents/SunWeb/data2cr.csv", header=FALSE, sep="")
 
 #TRAINING CLICK RATES AND REMOVE FROM TESTING
-#thresholds  <- c(-1,0,1:10/20)
-thresholds <- 0
+thresholds  <- c(-1,0,1:10/20)
+#thresholds <- 0
 MAEresults <-list()
 counter <-1
 for(threshold in thresholds)
 {
-  MAEsfoldMatrix <- numeric(0)
+  MAEsfoldMatrix        <- numeric(0)
   MAEsOnTrainfoldMatrix <- numeric(0)
-  for(fold in 1:size(intrain)[2])
+  for(fold in 1:1)
   {
-    training     <- as.data.table(data[intrain[,fold],])
-    testing      <- as.data.table(data[-intrain[,fold],])
     
-    print(mean(training$CLICK))
-    print(mean(testing$CLICK))
+    result <- DataPartition(Clickrates , data, intrain[[fold]])
     
-    print(length(unique(training$USERID)))
-    print(length(unique(testing$USERID)))
-    
-    uniqueUsersTraining <-  unique(training$USERID)
-    testingOffers       <-  unique(testing$OFFERID)
-    
-    #Create data.table index for fast access of data
-    setkey(training, USERID)
-    setkey(testing, USERID)
-    setkey(data, USERID)
-    
-    print("Trying threshold")
-    print(threshold)
-    
-    selectedUsers    <- uniqueUsersTraining[Clickrates>threshold]    #1 User IDS
-    nonselectedUsers <- uniqueUsersTraining[Clickrates<=threshold]   #1 User IDS
-    training2        <- training[.(selectedUsers)]
-    training2star    <- training[.(nonselectedUsers)]
+    training2 <- result[[1]]
+    training2star <- result[[2]]
+    testing <- result[[3]]
     
     #DATA ID PREP
     uniqueUser2     <- unique(training2$USERID)
@@ -97,8 +85,8 @@ for(threshold in thresholds)
     
     maxIter <- 100
     e <- 0.0001
-    #lambda <-c(exp(4:0),0)
-    lambda <- 0
+    lambda <-c(exp(4:0),0)
+    #lambda <- 0
     r<-20
     results<-list()
     MAEs <-0
@@ -110,21 +98,22 @@ for(threshold in thresholds)
       #write.csv(result[[1]],file = paste0("A","cr",threshold,"fold",fold,"l",round(l,2),".csv"),row.names = FALSE)
       #write.csv(result[[2]],file = paste0("B","cr",threshold,"fold",fold, "l",round(l,2),".csv"),row.names = FALSE)
       print("Found solution")
-      result             <- MAE(result[[1]],result[[2]],testing,uniqueUser2,uniqueUser2star,uniqueOffer2)
-      MAEs[count]        <- result[[1]]
-      MAEsOnTrain[count] <- result[[2]]
+      MAEresult             <- MAE(result[[1]],result[[2]],testing,uniqueUser2,uniqueUser2star,uniqueOffer2)
+      MAEs[count]        <- MAEresult[[1]]
+      MAEsOnTrain[count] <- MAEresult[[2]]
       count = count + 1
     }
     
     MAEsfoldMatrix  <- cbind(MAEsfoldMatrix,MAEs)
     MAEsOnTrainfoldMatrix <- cbind(MAEsOnTrainfoldMatrix,MAEsOnTrain)
+    
   }
   
   foldedMAE <- rowMeans(MAEsfoldMatrix)
   foldedMAEonTrain <- rowMeans(MAEsOnTrainfoldMatrix)
   
-  write.csv(foldedMAE,        file = paste0("MAE","cr",threshold,"csv"), row.names = FALSE)
-  write.csv(foldedMAEonTrain, file = paste0("MAEontrain","cr",threshold,"csv"), row.names = FALSE)
+  write.csv(foldedMAE,        file = paste0("MAE_","TH",threshold,"csv"), row.names = FALSE)
+  write.csv(foldedMAEonTrain, file = paste0("MAEontrain_","TH",threshold,"csv"), row.names = FALSE)
   counter = counter + 1
 }
 
