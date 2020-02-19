@@ -39,9 +39,15 @@ MAE <- function(A,B,testing, uniqueUser2 , uniqueUser2star , uniqueOffer2)
   AE3 <- abs(0-nontrainedTest$CLICK)
   AE <- c(AE1,AE2,AE3)
   MAE <- mean(AE)
+  MAEontrain <- mean(AE1)
+  
   
   print("maxpredonclick")
   print(max(predictions[validTest$CLICK==1]))
+  result <-list()
   
-  return(MAE)
+  result[[1]] <- MAE
+  result[[2]] <- MAEontrain 
+  
+  return(result)
 }

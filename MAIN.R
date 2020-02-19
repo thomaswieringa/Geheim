@@ -23,7 +23,6 @@ data  <- read.csv("~/Documents/SunWeb/data2.csv", sep=";")
 #data <- read.csv("~/Documents/Seminar master/Rscript/Geheim/data2.csv", sep=";")
 #data <- read.csv("~/Documents/Seminar master/Rscript/Data/Observations_Report.csv", sep=";")
 
-
 data <- as.data.table(data)
 
 #DATA ID PREP
@@ -35,21 +34,29 @@ userIDs      <- 1:length(uniqueUser)
 
 #create 5 partitions
 data$USERID  <- as.factor(data$USERID)
-intrain <- createDataPartition(data$USERID, p=0.7, list =F,times =5)
+intrain <- createDataPartition(data$USERID, p = 0.7, list =F, times = 5)
 data$USERID  <- as.numeric(data$USERID)
 
 
+#Calculate clickrate for every User in training set
+#Calculate them
+#Clickrates <- calcClickRates(uniqueUser, training)
+#fullset Thomas
+#Clickrates <- read.csv2("~/Documents/SunWeb/clickrate.csv", header=FALSE, sep="")
+#subset Thomas
+Clickrates <- read.csv2("~/Documents/SunWeb/data2cr.csv", header=FALSE, sep="")
+
 #TRAINING CLICK RATES AND REMOVE FROM TESTING
-#thresholds  <- c(0.001,0.01,0.1,0.5,0.6,0.7,0.8,0.9)
+#thresholds  <- c(-1,0,1:10/20)
 thresholds <- 0
 MAEresults <-list()
 counter <-1
 for(threshold in thresholds)
 {
   MAEsfoldMatrix <- numeric(0)
+  MAEsOnTrainfoldMatrix <- numeric(0)
   for(fold in 1:size(intrain)[2])
   {
-    
     training     <- as.data.table(data[intrain[,fold],])
     testing      <- as.data.table(data[-intrain[,fold],])
     
@@ -60,23 +67,12 @@ for(threshold in thresholds)
     print(length(unique(testing$USERID)))
     
     uniqueUsersTraining <-  unique(training$USERID)
-    testingOffers      <- unique(testing$OFFERID)
-    
+    testingOffers       <-  unique(testing$OFFERID)
     
     #Create data.table index for fast access of data
     setkey(training, USERID)
     setkey(testing, USERID)
     setkey(data, USERID)
-    
-    #Calculate clickrate for every User in training set
-    #Calculate them
-    #Clickrates <- calcClickRates(uniqueUser, training)
-    #fullset Thomas
-    #Clickrates <- read.csv2("~/Documents/SunWeb/clickrate.csv", header=FALSE, sep="")
-    #subset Thomas
-    Clickrates <- read.csv2("~/Documents/SunWeb/data2cr.csv", header=FALSE, sep="")
-    
-    
     
     print("Trying threshold")
     print(threshold)
@@ -85,7 +81,6 @@ for(threshold in thresholds)
     nonselectedUsers <- uniqueUsersTraining[Clickrates<=threshold]   #1 User IDS
     training2        <- training[.(selectedUsers)]
     training2star    <- training[.(nonselectedUsers)]
-    
     
     #DATA ID PREP
     uniqueUser2     <- unique(training2$USERID)
@@ -102,29 +97,35 @@ for(threshold in thresholds)
     
     maxIter <- 100
     e <- 0.0001
-    lambda <-c(exp(4:0),0)
+    #lambda <-c(exp(4:0),0)
+    lambda <- 0
     r<-20
     results<-list()
     MAEs <-0
+    MAEsOnTrain <-0
     count = 1
     for(l in lambda)
     {
       result <- SoftImputeALS(X,l,maxIter,e,training2,r)
-      write.csv(result[[1]],file = paste0("A","cr",threshold,"fold",fold,"l",round(l,2),".csv"),row.names = FALSE)
-      write.csv(result[[2]],file = paste0("B","cr",threshold,"fold",fold, "l",round(l,2),".csv"),row.names = FALSE)
+      #write.csv(result[[1]],file = paste0("A","cr",threshold,"fold",fold,"l",round(l,2),".csv"),row.names = FALSE)
+      #write.csv(result[[2]],file = paste0("B","cr",threshold,"fold",fold, "l",round(l,2),".csv"),row.names = FALSE)
       print("Found solution")
-      MAEs[count] = MAE(result[[1]],result[[2]],testing,uniqueUser2,uniqueUser2star,uniqueOffer2)
+      result             <- MAE(result[[1]],result[[2]],testing,uniqueUser2,uniqueUser2star,uniqueOffer2)
+      MAEs[count]        <- result[[1]]
+      MAEsOnTrain[count] <- result[[2]]
       count = count + 1
     }
     
     MAEsfoldMatrix  <- cbind(MAEsfoldMatrix,MAEs)
+    MAEsOnTrainfoldMatrix <- cbind(MAEsOnTrainfoldMatrix,MAEsOnTrain)
   }
   
   foldedMAE <- rowMeans(MAEsfoldMatrix)
-  MSEresults[[counter]] = foldedMAE
-  write.csv(foldedMAE,file = paste0("MAE","cr",threshold,"csv"),row.names = FALSE)
-  counter = counter + 1
+  foldedMAEonTrain <- rowMeans(MAEsOnTrainfoldMatrix)
   
+  write.csv(foldedMAE,        file = paste0("MAE","cr",threshold,"csv"), row.names = FALSE)
+  write.csv(foldedMAEonTrain, file = paste0("MAEontrain","cr",threshold,"csv"), row.names = FALSE)
+  counter = counter + 1
 }
 
 
