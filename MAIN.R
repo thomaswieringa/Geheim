@@ -77,9 +77,7 @@ for(i in c(2131,435,123))
   
   
   #TRAINING CLICK RATES AND REMOVE FROM TESTING
-  #thresholds  <- c(0.001,0.01,0.1,0.5,0.6,0.7,0.8,0.9)
-  #thresholds <- 0:10/20
-  thresholds <- 0
+  thresholds  <- c(-1,0,1:10/20)
   MAEresults <-list()
   counter <-1
   for(threshold in thresholds)
@@ -108,8 +106,7 @@ for(i in c(2131,435,123))
     
     maxIter <- 100
     e <- 0.0001
-    #lambda <-c(exp(4:0),0)
-    lambda <- 0
+    lambda <-c(exp(4:0),0)
     r<-20
     results<-list()
     MAEs <-0
@@ -127,7 +124,7 @@ for(i in c(2131,435,123))
   
     print("MAE calculated")
     write.csv(MAEs,file = paste0("MAE","cr",threshold,"r",r,"fold",holdCount,"l",round(l,2),".csv"),row.names = FALSE)
-    write.csv(MAEsTr,file = paste0("MAE","cr",threshold,"r",r,"fold",holdCount,"l",round(l,2),".csv"),row.names = FALSE)
+    write.csv(MAEsTrained,file = paste0("MAE","cr",threshold,"r",r,"fold",holdCount,"l",round(l,2),".csv"),row.names = FALSE)
     #print(MAEresults[[counter]])
     
     counter <- counter+1
