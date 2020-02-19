@@ -53,40 +53,21 @@ data$USERID  <- as.numeric(data$USERID)
 Clickrates <- read.csv2("~/Documents/SunWeb/data2cr.csv", header=FALSE, sep="")
 
 #TRAINING CLICK RATES AND REMOVE FROM TESTING
-thresholds  <- c(-1,0,1:10/20)
-#thresholds <- 0
+#thresholds  <- c(-1,0,1:10/20)
+thresholds <- 0
 MAEresults <-list()
 counter <-1
 for(threshold in thresholds)
 {
   MAEsfoldMatrix        <- numeric(0)
   MAEsOnTrainfoldMatrix <- numeric(0)
-  for(fold in 1:1)
+  for(fold in 2:2)
   {
-    
-    result <- DataPartition(Clickrates , data, intrain[[fold]])
-    
-    training2 <- result[[1]]
-    training2star <- result[[2]]
-    testing <- result[[3]]
-    
-    #DATA ID PREP
-    uniqueUser2     <- unique(training2$USERID)
-    uniqueUser2star <- unique(training2star$USERID)
-    uniqueOffer2    <- unique(training2$OFFERID)
-    
-    training2$USERID  <- mapvalues(training2$USERID, from=uniqueUser2, to=1:length(uniqueUser2))
-    training2$OFFERID <- mapvalues(training2$OFFERID,from=uniqueOffer2,to=1:length(uniqueOffer2))
-    
-    #CREATE SPARSE MATRIX
-    X <- sparseMatrix(i = training2$USERID,
-                      j = training2$OFFERID,
-                      x = training2$CLICK)
-    
+    datas <- DataPartition(Clickrates , data, intrain[[fold]])
     maxIter <- 100
     e <- 0.0001
-    lambda <-c(exp(4:0),0)
-    #lambda <- 0
+    #lambda <-c(exp(4:0),0)
+    lambda <- 0
     r<-20
     results<-list()
     MAEs <-0
@@ -94,11 +75,11 @@ for(threshold in thresholds)
     count = 1
     for(l in lambda)
     {
-      result <- SoftImputeALS(X,l,maxIter,e,training2,r)
+      result <- SoftImputeALS(datas[[1]],l,maxIter,e,datas[[2]],r)
       #write.csv(result[[1]],file = paste0("A","cr",threshold,"fold",fold,"l",round(l,2),".csv"),row.names = FALSE)
       #write.csv(result[[2]],file = paste0("B","cr",threshold,"fold",fold, "l",round(l,2),".csv"),row.names = FALSE)
       print("Found solution")
-      MAEresult             <- MAE(result[[1]],result[[2]],testing,uniqueUser2,uniqueUser2star,uniqueOffer2)
+      MAEresult             <- MAE(result[[1]],result[[2]],testing,  datas[[3]], datas[[4]], datas[[5]])
       MAEs[count]        <- MAEresult[[1]]
       MAEsOnTrain[count] <- MAEresult[[2]]
       count = count + 1

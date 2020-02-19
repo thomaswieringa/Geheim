@@ -25,12 +25,31 @@ DataPartition <- function(Clickrates,data,intrain)
   nonselectedUsers <- uniqueUsersTraining[Clickrates<=threshold]   #1 User IDS
   training2        <- training[.(selectedUsers)]
   training2star    <- training[.(nonselectedUsers)]
+
+  #DATA ID PREP
+  uniqueUser2     <- unique(training2$USERID)
+  uniqueUser2star <- unique(training2star$USERID)
+  uniqueOffer2    <- unique(training2$OFFERID)
+  
+  training2$USERID  <- mapvalues(training2$USERID, from=uniqueUser2, to=1:length(uniqueUser2))
+  training2$OFFERID <- mapvalues(training2$OFFERID,from=uniqueOffer2,to=1:length(uniqueOffer2))
+  
+  
+  #CREATE SPARSE MATRIX
+  X <- sparseMatrix(i = training2$USERID,
+                    j = training2$OFFERID,
+                    x = training2$CLICK)
+  
+  
   
   res <-list()
-  res[[1]] <- training2
-  res[[2]] <- training2star
-  res[[3]] <- testing
+  res[[1]] <- X
+  res[[2]] <- training2
+  res[[3]] <-   uniqueUser2
+  res[[4]] <-  uniqueUser2star
+  res[[5]] < - uniqueOffer2
   
+
   return(res)
 }
 

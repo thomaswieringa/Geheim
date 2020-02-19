@@ -1,9 +1,9 @@
-P_Omega <- function(A, B, data)
+P_Omega <- function(A2, B2, data2)
 {
-  ivec <- data$USERID
-  jvec <- data$OFFERID
-  Astar <- A[ivec,]
-  Bstar <- B[jvec,]
+  ivec <- data2$USERID
+  jvec <- data2$OFFERID
+  Astar <- A2[ivec,]
+  Bstar <- B2[jvec,]
   predVec <- rowSums(Astar*Bstar)
   
   #CREATE SPARSE MATRIX
@@ -14,3 +14,4 @@ P_Omega <- function(A, B, data)
   
   return(AB)
 }
+

@@ -4,10 +4,14 @@ SoftImputeALS <- function(X, lambda2, maxIter, e, training3, r)
   
   m <- X@Dim[1]
   n <- X@Dim[2]
+
   #Initialize matrices
-  V =matrix(0,n,r)
+  V = matrix(0,n,r)
   U =matrix(rnorm(m*r),m,r)
   U =svd(U)$u
+  U <- createOrthogonalX(m,r)
+  V <- rbind(diag(1,r,r),matrix(0,n-r,r))
+
   Dsq=rep(1,r)
   
   for (t in 1:maxIter) 
