@@ -123,8 +123,8 @@ for(i in c(2131,435,123))
     }
   
     print("MAE calculated")
-    write.csv(MAEs,file = paste0("MAE","cr",threshold,"r",r,"fold",holdCount,"l",round(l,2),".csv"),row.names = FALSE)
-    write.csv(MAEsTrained,file = paste0("MAE","cr",threshold,"r",r,"fold",holdCount,"l",round(l,2),".csv"),row.names = FALSE)
+    write.csv(MAEs,file = paste0("MAEs","cr",threshold,"r",r,"fold",holdCount,".csv"),row.names = FALSE)
+    write.csv(MAEsTrained,file = paste0("MAEsonTrained","cr",threshold,"r",r,"fold",holdCount,".csv"),row.names = FALSE)
     #print(MAEresults[[counter]])
     
     counter <- counter+1

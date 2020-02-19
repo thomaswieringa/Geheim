@@ -43,5 +43,9 @@ MAE <- function(A,B,testing, uniqueUser2 , uniqueUser2star , uniqueOffer2)
   print("maxpredonclick")
   print(max(predictions[validTest$CLICK==1]))
   
-  return(MAE)
+  output <- list()
+  output[[1]] <- MAE
+  output[[2]] <- mean(AE1)
+    
+  return(output)
 }
