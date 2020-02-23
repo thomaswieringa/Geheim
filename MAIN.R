@@ -14,9 +14,9 @@ library(pracma)
 #READ DATA
 #full data thomas
 #data <- read.csv("~/Documents/SunWeb/Observations_Report.csv", sep=";")
-#data <- read.csv("~/Desktop/Observations_Report.csv", sep=";")
+data <- read.csv("~/Desktop/Observations_Report.csv", sep=";")
 #subset thomas
-data  <- read.csv("~/Documents/SunWeb/data2.csv", sep=";")
+#data  <- read.csv("~/Documents/SunWeb/data2.csv", sep=";")
 
 #LUDO DINGEN
 #data <- read.csv("~/Desktop/Observations_Report kopie.csv", sep=";")
@@ -39,7 +39,6 @@ userIDs      <- 1:length(uniqueUser)
 holdCount <- 1
 for(i in c(2131,435,123))
 {
-  
   #DATA PARTITIONING
   data$USERID  <- as.factor(data$USERID)
   set.seed(i)
@@ -68,13 +67,7 @@ for(i in c(2131,435,123))
   setkey(data, USERID)
   
   #Calculate clickrate for every User in training set
-  #Calculate them
-  #Clickrates <- calcClickRates(uniqueUser, training)
-  #fullset Thomas
-  #Clickrates <- read.csv2("~/Documents/SunWeb/clickrate.csv", header=FALSE, sep="")
-  #subset Thomas
-  Clickrates <- read.csv2("~/Documents/SunWeb/data2cr.csv", header=FALSE, sep="")
-  
+  Clickrates <- calcClickRates(uniqueUsersTraining, training)
   
   #TRAINING CLICK RATES AND REMOVE FROM TESTING
   thresholds  <- c(-1,0,1:10/20)
