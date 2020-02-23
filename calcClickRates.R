@@ -5,7 +5,7 @@ calcClickRates <- function(uniqueUser, training)
   {
     userclicks <- training[.(u)]
     click <- sum(userclicks$CLICK == 1)
-    nonclick <- sum(userclicks$CLICK == -1)
+    nonclick <- sum(userclicks$CLICK == 0)
     Clickrates[u] <- click/(click+nonclick)
     if(is.na(Clickrates[u]))
     {
