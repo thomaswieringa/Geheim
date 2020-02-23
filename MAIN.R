@@ -27,7 +27,6 @@ data <- read.csv("~/Desktop/Observations_Report.csv", sep=";")
 data <- as.data.table(data)
 
 
-
 #DATA ID PREP
 uniqueUser   <- unique(data$USERID)
 uniqueOffer  <- unique(data$OFFERID)
@@ -118,11 +117,8 @@ for(i in c(2131,435,123))
     print("MAE calculated")
     write.csv(MAEs,file = paste0("MAEs","cr",threshold,"r",r,"fold",holdCount,".csv"),row.names = FALSE)
     write.csv(MAEsTrained,file = paste0("MAEsonTrained","cr",threshold,"r",r,"fold",holdCount,".csv"),row.names = FALSE)
-    #print(MAEresults[[counter]])
-    
     counter <- counter+1
   }
-  
   holdCount <- holdCount + 1
 }
 
