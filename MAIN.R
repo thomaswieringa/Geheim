@@ -36,7 +36,8 @@ userIDs      <- 1:length(uniqueUser)
 
 
 holdCount <- 1
-for(i in c(2131,435,123))
+
+for(i in c(2131,435,123,345,987))
 {
   #DATA PARTITIONING
   data$USERID  <- as.factor(data$USERID)
@@ -69,8 +70,7 @@ for(i in c(2131,435,123))
   Clickrates <- calcClickRates(uniqueUsersTraining, training)
   
   #TRAINING CLICK RATES AND REMOVE FROM TESTING
-  thresholds  <- c(-1,0,1:10/20)
-  MAEresults <-list()
+  thresholds  <- c(-1,0:19/20)
   counter <-1
   for(threshold in thresholds)
   {
@@ -103,6 +103,7 @@ for(i in c(2131,435,123))
     results<-list()
     MAEs <-0
     MAEsTrained <-0
+    Ranks < -0
     count = 1
     
     for(l in lambda)
@@ -111,12 +112,14 @@ for(i in c(2131,435,123))
       MAEresult <-  MAE(result[[1]],result[[2]],testing,uniqueUser2,uniqueUser2star,uniqueOffer2)
       MAEs[count]        <- MAEresult[[1]]
       MAEsTrained[count] <- MAEresult[[2]]
+      Ranks[count] <- result[[3]]
       count=count+1
     }
   
     print("MAE calculated")
     write.csv(MAEs,file = paste0("MAEs","cr",threshold,"r",r,"fold",holdCount,".csv"),row.names = FALSE)
     write.csv(MAEsTrained,file = paste0("MAEsonTrained","cr",threshold,"r",r,"fold",holdCount,".csv"),row.names = FALSE)
+    write.csv(Ranks,file = paste0("Ranks","cr",threshold,"r",r,"fold",holdCount,".csv"),row.names = FALSE)
     counter <- counter+1
   }
   holdCount <- holdCount + 1

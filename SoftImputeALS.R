@@ -3,24 +3,24 @@ SoftImputeALS <- function(X, lambda2, maxIter, e, training2, r)
   m <- X@Dim[1]
   n <- X@Dim[2]
   #Initialize matrices
-  V=matrix(0,n,r)
-  U=matrix(rnorm(m*r),m,r)
-  U=svd(U)$u
-  Dsq=rep(1,r)
+  V <- matrix(0,n,r)
+  U <- matrix(rnorm(m*r),m,r)
+  U <- svd(U)$u
+  Dsq <- rep(1,r)
   
   for (t in 1:maxIter) 
   {
     print(paste0("Current iteration:  ", t))
     
-    U_old=U
-    V_old=V
-    Dsq_old=Dsq
+    U_old <- U
+    V_old  <- V
+    Dsq_old  <- Dsq
     D <- sqrt(Dsq) 
     
     #B step
     pAB <- P_Omega(t(t(U)*D),t(t(V)*D),training2)
-    B_thilde=(t(U)%*%(X-pAB)) + Dsq*t(V)
-    B_thilde=B_thilde*(sqrt(Dsq)/(Dsq+lambda2))
+    B_thilde  <- (t(U)%*%(X-pAB)) + Dsq*t(V)
+    B_thilde   <- B_thilde*(sqrt(Dsq)/(Dsq+lambda2))
     
     
     #update V & D
@@ -57,10 +57,11 @@ SoftImputeALS <- function(X, lambda2, maxIter, e, training2, r)
       sU  <-svd(U)
       U   <-sU$u
       Dsq <-sU$d
-      V=V%*%sU$v
-      Dsq=pmax(Dsq-lambda2,0)
-      D   <- sqrt(Dsq) 
-      return(list(t(t(U)*D),t(t(V)*D)))
+      V <-V%*%sU$v
+      Dsq <-pmax(Dsq-lambda2,0)
+      D   <- sqrt(Dsq)
+      
+      return(list(t(t(U)*D),t(t(V)*D), sum(D>0)))
     }
   }
 }
