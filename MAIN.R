@@ -14,9 +14,9 @@ library(pracma)
 #READ DATA
 #full data thomas
 #data <- read.csv("~/Documents/SunWeb/Observations_Report.csv", sep=";")
-data <- read.csv("~/Desktop/Observations_Report.csv", sep=";")
+#data <- read.csv("~/Desktop/Observations_Report.csv", sep=";")
 #subset thomas
-#data  <- read.csv("~/Documents/SunWeb/data2.csv", sep=";")
+data  <- read.csv("~/Documents/SunWeb/data2.csv", sep=";")
 
 #LUDO DINGEN
 #data <- read.csv("~/Desktop/Observations_Report kopie.csv", sep=";")
@@ -26,7 +26,6 @@ data <- read.csv("~/Desktop/Observations_Report.csv", sep=";")
 
 data <- as.data.table(data)
 
-
 #DATA ID PREP
 uniqueUser   <- unique(data$USERID)
 uniqueOffer  <- unique(data$OFFERID)
@@ -35,42 +34,59 @@ data$OFFERID <- mapvalues(data$OFFERID,from=uniqueOffer,to=1:length(uniqueOffer)
 userIDs      <- 1:length(uniqueUser)
 
 
-holdCount <- 1
+#DATA PARTITIONING
+data$USERID  <- as.factor(data$USERID)
+set.seed(1908)
+options(warn=-1)
+intrain      <- createDataPartition(data$USERID, p = 0.8, list = F)
+options(warn=0)
+data$USERID  <- as.numeric(data$USERID)
+data2              <- as.data.table(data[intrain,])
+finaltesting      <- as.data.table(data[-intrain,])
 
-for(i in c(2131,435,123,345,987))
+
+uniqueUserData  <- unique(data2$USERID)
+uniqueOfferData <- unique(data2$OFFERID)    
+
+#MAP OFFER IDS values
+data2$OFFERID                  <- mapvalues(data2$OFFERID, from=uniqueOfferData, to=1:length(uniqueOfferData))
+finaltesting$OFFERID           <- mapvalues(finaltesting$OFFERID, from=uniqueOfferData, to=1:length(uniqueOfferData))
+
+
+
+holdCount <- 1
+for(i in 1:5)
 {
   #DATA PARTITIONING
-  data$USERID  <- as.factor(data$USERID)
-  set.seed(i)
+  data2$USERID  <- as.factor(data2$USERID)
+  set.seed(i*2)
   options(warn=-1)
-  intrain      <- createDataPartition(data$USERID, p = 0.7, list = F)
+  intrain      <- createDataPartition(data2$USERID, p = 0.8, list = F)
   options(warn=0)
-  data$USERID  <- as.numeric(data$USERID)
-  training     <- as.data.table(data[intrain,])
-  testing      <- as.data.table(data[-intrain,])
-  
+  data2$USERID  <- as.numeric(data2$USERID)
+  training     <- as.data.table(data2[intrain,])
+  testing      <- as.data.table(data2[-intrain,])
   
   print(mean(training$CLICK))
   print(mean(testing$CLICK))
-  
   
   print(length(unique(training$USERID)))
   print(length(unique(testing$USERID)))
   
   uniqueUsersTraining <-  unique(training$USERID)
-  testingOffers      <- unique(testing$OFFERID)
-  
+  testingOffers       <- unique(testing$OFFERID)
   
   #Create data.table index for fast access of data
   setkey(training, USERID)
   setkey(testing, USERID)
-  setkey(data, USERID)
+  setkey(data2, USERID)
   
   #Calculate clickrate for every User in training set
   Clickrates <- calcClickRates(uniqueUsersTraining, training)
   
   #TRAINING CLICK RATES AND REMOVE FROM TESTING
-  thresholds  <- c(-1,0:19/20)
+  #thresholds  <- c(-1,0:19/20)
+  thresholds  <- 0.10
   counter <-1
   for(threshold in thresholds)
   {
@@ -97,14 +113,17 @@ for(i in c(2131,435,123,345,987))
                       x = training2$CLICK)
     
     maxIter <- 100
-    e <- 0.0001
+    e <- 0.001
     lambda <-c(exp(4:0),0)
     r<-20
     results<-list()
     MAEs <-0
     MAEsTrained <-0
-    Ranks < -0
+    Ranks <- 0
     count = 1
+    
+    print("X")
+    print(X)
     
     for(l in lambda)
     {
@@ -124,5 +143,14 @@ for(i in c(2131,435,123,345,987))
   }
   holdCount <- holdCount + 1
 }
+
+#OPNIEUW TRAINEN MET OPTIMALE LAMBDA ZONDER THRESHOLD.
+#OPNIEUW TRAINEN MET OPTIMALE LAMBDA EN THRESHOLD.
+
+
+
+
+
+
 
 
