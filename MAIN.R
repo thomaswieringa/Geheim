@@ -14,9 +14,9 @@ library(pracma)
 #READ DATA
 #full data thomas
 #data <- read.csv("~/Documents/SunWeb/Observations_Report.csv", sep=";")
-#data <- read.csv("~/Desktop/Observations_Report.csv", sep=";")
+data <- read.csv("~/Desktop/Observations_Report.csv", sep=";")
 #subset thomas
-data  <- read.csv("~/Documents/SunWeb/data2.csv", sep=";")
+#data  <- read.csv("~/Documents/SunWeb/data2.csv", sep=";")
 
 #LUDO DINGEN
 #data <- read.csv("~/Desktop/Observations_Report kopie.csv", sep=";")
@@ -51,8 +51,6 @@ uniqueOfferData <- unique(data2$OFFERID)
 #MAP OFFER IDS values
 data2$OFFERID                  <- mapvalues(data2$OFFERID, from=uniqueOfferData, to=1:length(uniqueOfferData))
 finaltesting$OFFERID           <- mapvalues(finaltesting$OFFERID, from=uniqueOfferData, to=1:length(uniqueOfferData))
-
-
 
 holdCount <- 1
 for(i in 1:5)
