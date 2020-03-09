@@ -14,9 +14,9 @@ library(pracma)
 #READ DATA
 #full data thomas
 #data <- read.csv("~/Documents/SunWeb/Observations_Report.csv", sep=";")
-#data <- read.csv("~/Desktop/Observations_Report.csv", sep=";")
+data <- read.csv("~/Desktop/Observations_Report.csv", sep=";")
 #subset thomas
-data  <- read.csv("~/Documents/SunWeb/data2.csv", sep=";")
+#data  <- read.csv("~/Documents/SunWeb/data2.csv", sep=";")
 
 #LUDO DINGEN
 #data <- read.csv("~/Desktop/Observations_Report kopie.csv", sep=";")
@@ -74,7 +74,7 @@ for(i in 1:5)
   print(length(unique(testing$USERID)))
   
   uniqueUsersTraining <-  unique(training$USERID)
-  testingOffers       <- unique(testing$OFFERID)
+  testingOffers       <-  unique(testing$OFFERID)
   
   #Create data.table index for fast access of data
   setkey(training, USERID)
@@ -86,7 +86,7 @@ for(i in 1:5)
   
   #TRAINING CLICK RATES AND REMOVE FROM TESTING
   #thresholds  <- c(-1,0:19/20)
-  thresholds  <- 0.10
+  threshold  <- 0.8
   counter <-1
   for(threshold in thresholds)
   {
@@ -112,9 +112,10 @@ for(i in 1:5)
                       j = training2$OFFERID,
                       x = training2$CLICK)
     
-    maxIter <- 100
+    maxIter <- 1000
     e <- 0.001
-    lambda <-c(exp(4:0),0)
+    #lambda <-c(exp(4:0),0)
+    lambda <- 0
     r<-20
     results<-list()
     MAEs <-0
@@ -122,13 +123,12 @@ for(i in 1:5)
     Ranks <- 0
     count = 1
     
-    print("X")
-    print(X)
-    
+  
     for(l in lambda)
     {
-      result <- SoftImputeALS(X,l,maxIter,e,training2,r)
-      MAEresult <-  MAE(result[[1]],result[[2]],testing,uniqueUser2,uniqueUser2star,uniqueOffer2)
+      #result <- SoftImputeALS(X,l,maxIter,e,training2,r)
+      result             <- Ssimpute.als(X,J=r,thresh=e,lambda=l,maxit=maxIter,trace.it = FALSE)
+      MAEresult          <-  MAE(result[[1]]%*%diag(sqrt(result[[2]])),result[[3]]%*%diag(sqrt(result[[2]])),testing,uniqueUser2,uniqueUser2star,uniqueOffer2)
       MAEs[count]        <- MAEresult[[1]]
       MAEsTrained[count] <- MAEresult[[2]]
       Ranks[count] <- result[[3]]
