@@ -108,14 +108,16 @@ for(i in 1:5)
     training2$OFFERID <- mapvalues(training2$OFFERID,from=uniqueOffer2,to=1:length(uniqueOffer2))
     
     #CREATE SPARSE MATRIX
+    
     X <- sparseMatrix(i = training2$USERID,
                       j = training2$OFFERID,
                       x = training2$CLICK)
     
+    
     maxIter <- 1000
     e <- 0.001
     #lambda <-c(exp(4:0),0)
-    lambda <- 0
+    lambda <- exp(1)
     r<-20
     results<-list()
     MAEs <-0
@@ -126,12 +128,15 @@ for(i in 1:5)
   
     for(l in lambda)
     {
-      #result <- SoftImputeALS(X,l,maxIter,e,training2,r)
-      result             <- Ssimpute.als(X,J=r,thresh=e,lambda=l,maxit=maxIter,trace.it = FALSE)
-      MAEresult          <-  MAE(result[[1]]%*%diag(sqrt(result[[2]])),result[[3]]%*%diag(sqrt(result[[2]])),testing,uniqueUser2,uniqueUser2star,uniqueOffer2)
-      MAEs[count]        <- MAEresult[[1]]
-      MAEsTrained[count] <- MAEresult[[2]]
-      Ranks[count] <- result[[3]]
+      result              <- SoftImputeALS(X,l,maxIter,e,training2,r)
+      resultP             <- Ssimpute.als(X,J=r,thresh=e,lambda=l,maxit=maxIter,trace.it = TRUE)
+      ABT                 <- result[[1]]%*%t(result[[2]])
+      ABTP                <- resultP[[1]]%*%diag(sqrt(resultP[[2]]))%*%t(resultP[[3]]%*%diag(sqrt(resultP[[2]])))
+      MAEresultpackage    <-  MAE(resultP[[1]]%*%diag(sqrt(resultP[[2]])),resultP[[3]]%*%diag(sqrt(resultP[[2]])),testing,uniqueUser2,uniqueUser2star,uniqueOffer2)
+      MAEresult           <-  MAE(result[[1]],result[[2]],testing,uniqueUser2,uniqueUser2star,uniqueOffer2)
+      MAEs[count]         <- MAEresult[[1]]
+      MAEsTrained[count]  <- MAEresult[[2]]
+      Ranks[count]        <- result[[3]]
       count=count+1
     }
   

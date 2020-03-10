@@ -1,12 +1,12 @@
-SoftImputeALS <- function(X, lambda2, maxIter, e, training2, r)
+SoftImputeALS <- function(X, lambda3, maxIter, e, training2, R)
 {
   m <- X@Dim[1]
   n <- X@Dim[2]
   #Initialize matrices
-  V <- matrix(0,n,r)
-  U <- matrix(rnorm(m*r),m,r)
+  V <- matrix(0,n,R)
+  U <- matrix(rnorm(m*r),m,R)
   U <- svd(U)$u
-  Dsq <- rep(1,r)
+  Dsq <- rep(1,R)
   D <- sqrt(Dsq) 
   Xdiff <- X
   
@@ -19,18 +19,19 @@ SoftImputeALS <- function(X, lambda2, maxIter, e, training2, r)
     Dsq_old  <- Dsq
     
     if(t>2){
+  
       B <- t(t(V)*D)
       A <- t(t(U)*D)
-      Xstar <- POmega(A,B,training2)
-      Xdiff@x <- X@x - Xstar
-      B_thildeT <- t(U)%*%Xdiff + D*t(B)
+      Xomega <- POmega(A,B,training2)
+      Xdiff@x <- X@x - Xomega
+      B_thildeT <- (t(U)%*%Xdiff + t(B)*D)
     }
     
     else {
       B_thildeT <- t(U)%*%Xdiff 
     }
     
-    B_thildeT <- B_thildeT*(sqrt(Dsq)/(Dsq+lambda2))
+    B_thildeT <- B_thildeT*(Dsq/(Dsq+lambda3))
     
     SVD1 <- svd(t(B_thildeT))
     V <- SVD1$u
@@ -44,8 +45,8 @@ SoftImputeALS <- function(X, lambda2, maxIter, e, training2, r)
     Xdiff@x <- X@x - Xstar
    
     A_thildeT <- t(V)%*%t(Xdiff) + D*t(A)
-    A_thildeT <- A_thildeT*(sqrt(Dsq)/(Dsq+lambda2))
-    
+    A_thildeT <- A_thildeT*(Dsq/(Dsq+lambda3))
+  
     #Update U & D
     SVD2 <- svd(t(A_thildeT))
     U    <- SVD2$u
@@ -67,11 +68,11 @@ SoftImputeALS <- function(X, lambda2, maxIter, e, training2, r)
       SVD2 <- svd(t(A_thildeT))
       U    <- SVD2$u
       Dsq  <- SVD2$d
-      Dsq  <- pmax(Dsq-lambda2,0)
+      Dsq  <- pmax(Dsq-lambda3,0)
       D    <- sqrt(Dsq)
       V    <- V%*%SVD2$v
       
-      rank <- min(sum(Dsq>0)+1,r)
+      rank <- min(sum(Dsq>0)+1,R)
       
       return(list(t(t(U)*D),t(t(V)*D), rank))
     }
