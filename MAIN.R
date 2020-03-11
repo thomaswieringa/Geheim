@@ -49,8 +49,6 @@ data2              <- as.data.table(data[intrain,])
 finaltesting      <- as.data.table(data[-intrain,])
 
 
-
-
 uniqueUserData  <- unique(data2$USERID)
 uniqueOfferData <- unique(data2$OFFERID)    
 
@@ -69,9 +67,6 @@ Phi$OFFERID <- mapvalues(Phi$OFFERID,from=uniqueOfferData,to=1:length(uniqueOffe
 Phi <- Phi[(Phi$OFFERID <= length(uniqueOfferData)),]
 Phi <- Phi[!duplicated(Phi[,'OFFERID']),]
 PHI <- Phi[order(Phi$OFFERID),]
-
-
-
 
 
 holdCount <- 1
@@ -156,9 +151,10 @@ for(i in 1:5)
     MAEs <-0
     MAEs_CB <-0
     MAEsTrained <-0
-    CBMAEsTrained_CB <-0
+    MAEsTrained_CB <-0
     Ranks <- 0
     Ranks_CB <- 0
+    Phis  <-list()
     count = 1
     
     for(l in lambda)
@@ -172,10 +168,11 @@ for(i in 1:5)
       
       #CB SoftImpute
       result_CB              <- CBSoftImputeALS(X,l,maxIter,e,training2,r,PHI2)
-      MAEresult_CB           <-  MAE(CBresult[[1]],CBresult[[2]],testing,uniqueUser2,uniqueUser2star,uniqueOffer2)
-      MAEs_CB[count]         <-  CBMAEresult[[1]]
-      MAEsTrained_CB[count]  <-  CBMAEresult[[2]]
-      Ranks_CB[count]        <-  result[[3]]
+      MAEresult_CB           <-  MAE(result_CB[[1]],result_CB[[2]],testing,uniqueUser2,uniqueUser2star,uniqueOffer2)
+      MAEs_CB[count]         <-  MAEresult_CB[[1]]
+      MAEsTrained_CB[count]  <-  MAEresult_CB[[2]]
+      Ranks_CB[count]        <-  result_CB[[3]]
+      Phis[[count]]          <-  result_CB[[4]]
       count=count+1
       
     }
@@ -191,6 +188,13 @@ for(i in 1:5)
     write.csv(MAEs_CB,file = paste0("MAEs_CB","cr",threshold,"r",r,"fold",holdCount,".csv"),row.names = FALSE)
     write.csv(MAEsTrained_CB,file = paste0("MAEsonTrained_CB","cr",threshold,"r",r,"fold",holdCount,".csv"),row.names = FALSE)
     write.csv(Ranks_CB,file = paste0("Ranks_CB","cr",threshold,"r",r,"fold",holdCount,".csv"),row.names = FALSE)
+    
+    count = 1
+    for(l in lambda){
+      write.csv(Ranks_CB,file = paste0("PHI","cr",threshold,"l", count ,"r",r,"fold",holdCount,".csv"),row.names = FALSE)  
+      count <- count + 1 
+    }
+    
     
     counter <- counter+1
   }

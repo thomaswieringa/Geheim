@@ -75,7 +75,7 @@ CBSoftImputeALS <- function(X, lambda3, maxIter, e, training2, R,PHI)
       
       rank <- min(sum(Dsq>0)+1,R)
       
-      return(list(t(t(U)*D),t(t(V)*D), rank))
+      return(list(t(t(U)*D),t(t(V)*D), rank,C_thilde))
     }
   }
 }
