@@ -9,6 +9,7 @@ library(svd)
 library(ptycho)
 library(expm)
 library(pracma)
+library(MASS)
 
 
 #READ DATA
@@ -21,7 +22,10 @@ data <- read.csv("~/Desktop/Observations_Report.csv", sep=";")
 #LUDO DINGEN
 #data <- read.csv("~/Desktop/Observations_Report kopie.csv", sep=";")
 #data <- read.csv("~/Documents/Seminar master/Rscript/Geheim/data2.csv", sep=";")
-data <- read.csv("~/Documents/Seminar master/Rscript/Data/Observations_Report.csv", sep=";")
+#data <- read.csv("~/Documents/Seminar master/Rscript/Data/Observations_Report.csv", sep=";")
+
+#OFFERS
+Offer <- read.csv2("~/Desktop/OfferDetails_Cleaned.csv")
 
 
 data <- as.data.table(data)
@@ -45,12 +49,28 @@ data2              <- as.data.table(data[intrain,])
 finaltesting      <- as.data.table(data[-intrain,])
 
 
+
+
 uniqueUserData  <- unique(data2$USERID)
 uniqueOfferData <- unique(data2$OFFERID)    
 
 #MAP OFFER IDS values
 data2$OFFERID                  <- mapvalues(data2$OFFERID, from=uniqueOfferData, to=1:length(uniqueOfferData))
 finaltesting$OFFERID           <- mapvalues(finaltesting$OFFERID, from=uniqueOfferData, to=1:length(uniqueOfferData))
+
+#PHI PREP
+Phi <- Offer[,c(3,8:14)]
+Phi <- Offer[,-2]
+Phi <- as.data.table(Phi)
+Phi$OFFERID <- mapvalues(Phi$OFFERID,from=uniqueOffer,to=1:length(uniqueOffer))
+Phi <- Phi[(Phi$OFFERID <= length(uniqueOffer)),]
+Phi <- Phi[!duplicated(Phi[,'OFFERID']),]
+Phi$OFFERID <- mapvalues(Phi$OFFERID,from=uniqueOfferData,to=1:length(uniqueOfferData))
+Phi <- Phi[(Phi$OFFERID <= length(uniqueOfferData)),]
+Phi <- Phi[!duplicated(Phi[,'OFFERID']),]
+PHI <- Phi[order(Phi$OFFERID),]
+
+
 
 
 
@@ -86,7 +106,7 @@ for(i in 1:5)
   
   #TRAINING CLICK RATES AND REMOVE FROM TESTING
   #thresholds  <- c(-1,0:19/20)
-  thresholds  <- 0.4
+  thresholds  <- 0.1
   counter <-1
   for(threshold in thresholds)
   {
@@ -107,6 +127,17 @@ for(i in 1:5)
     training2$USERID  <- mapvalues(training2$USERID, from=uniqueUser2, to=1:length(uniqueUser2))
     training2$OFFERID <- mapvalues(training2$OFFERID,from=uniqueOffer2,to=1:length(uniqueOffer2))
     
+    
+    #PHI PREP
+    PHI2 <- PHI
+    PHI2$OFFERID <- mapvalues(PHI2$OFFERID,from=uniqueOffer2,to=1:length(uniqueOffer2))
+    PHI2 <- PHI2[(PHI2$OFFERID <= length(uniqueOffer2)),]
+    PHI2 <- PHI2[!duplicated(PHI2[,'OFFERID']),]
+    PHI2 <- PHI2[order(PHI2$OFFERID),]
+    PHI2 <- PHI2[,-1] 
+    PHI2 <- as.matrix(PHI2)
+    
+    
     #CREATE SPARSE MATRIX
     
     training2 <- as.data.frame(training2)
@@ -123,28 +154,44 @@ for(i in 1:5)
     r<-20
     results<-list()
     MAEs <-0
+    MAEs_CB <-0
     MAEsTrained <-0
+    CBMAEsTrained_CB <-0
     Ranks <- 0
+    Ranks_CB <- 0
     count = 1
-  
+    
     for(l in lambda)
     {
+      #SoftImpute
       result              <- SoftImputeALS(X,l,maxIter,e,training2,r)
-      #resultP             <- Ssimpute.als(X,J=r,thresh=e,lambda=l,maxit=maxIter,trace.it = TRUE)
-      #ABT                 <- result[[1]]%*%t(result[[2]])
-      #ABTP                <- resultP[[1]]%*%diag(sqrt(resultP[[2]]))%*%t(resultP[[3]]%*%diag(sqrt(resultP[[2]])))
-      #MAEresultpackage    <-  MAE(resultP[[1]]%*%diag(sqrt(resultP[[2]])),resultP[[3]]%*%diag(sqrt(resultP[[2]])),testing,uniqueUser2,uniqueUser2star,uniqueOffer2)
       MAEresult           <-  MAE(result[[1]],result[[2]],testing,uniqueUser2,uniqueUser2star,uniqueOffer2)
       MAEs[count]         <-  MAEresult[[1]]
       MAEsTrained[count]  <-  MAEresult[[2]]
       Ranks[count]        <-  result[[3]]
+      
+      #CB SoftImpute
+      result_CB              <- CBSoftImputeALS(X,l,maxIter,e,training2,r,PHI2)
+      MAEresult_CB           <-  MAE(CBresult[[1]],CBresult[[2]],testing,uniqueUser2,uniqueUser2star,uniqueOffer2)
+      MAEs_CB[count]         <-  CBMAEresult[[1]]
+      MAEsTrained_CB[count]  <-  CBMAEresult[[2]]
+      Ranks_CB[count]        <-  result[[3]]
       count=count+1
+      
     }
-  
-    print("MAE calculated")
+    
+    print("Finished one lambda set")
+    
+    #Write for SoftImpute
     write.csv(MAEs,file = paste0("MAEs","cr",threshold,"r",r,"fold",holdCount,".csv"),row.names = FALSE)
     write.csv(MAEsTrained,file = paste0("MAEsonTrained","cr",threshold,"r",r,"fold",holdCount,".csv"),row.names = FALSE)
     write.csv(Ranks,file = paste0("Ranks","cr",threshold,"r",r,"fold",holdCount,".csv"),row.names = FALSE)
+    
+    #Write for CB SoftImpute
+    write.csv(MAEs_CB,file = paste0("MAEs_CB","cr",threshold,"r",r,"fold",holdCount,".csv"),row.names = FALSE)
+    write.csv(MAEsTrained_CB,file = paste0("MAEsonTrained_CB","cr",threshold,"r",r,"fold",holdCount,".csv"),row.names = FALSE)
+    write.csv(Ranks_CB,file = paste0("Ranks_CB","cr",threshold,"r",r,"fold",holdCount,".csv"),row.names = FALSE)
+    
     counter <- counter+1
   }
   holdCount <- holdCount + 1
