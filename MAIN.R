@@ -21,7 +21,7 @@ data <- read.csv("~/Desktop/Observations_Report.csv", sep=";")
 #LUDO DINGEN
 #data <- read.csv("~/Desktop/Observations_Report kopie.csv", sep=";")
 #data <- read.csv("~/Documents/Seminar master/Rscript/Geheim/data2.csv", sep=";")
-#data <- read.csv("~/Documents/Seminar master/Rscript/Data/Observations_Report.csv", sep=";")
+data <- read.csv("~/Documents/Seminar master/Rscript/Data/Observations_Report.csv", sep=";")
 
 
 data <- as.data.table(data)
@@ -86,7 +86,7 @@ for(i in 1:5)
   
   #TRAINING CLICK RATES AND REMOVE FROM TESTING
   #thresholds  <- c(-1,0:19/20)
-  threshold  <- 0.8
+  thresholds  <- 0.4
   counter <-1
   for(threshold in thresholds)
   {
@@ -109,6 +109,9 @@ for(i in 1:5)
     
     #CREATE SPARSE MATRIX
     
+    training2 <- as.data.frame(training2)
+    training2 <- training2[!duplicated(training2[c("USERID","OFFERID")]),]
+    
     X <- sparseMatrix(i = training2$USERID,
                       j = training2$OFFERID,
                       x = training2$CLICK)
@@ -116,27 +119,25 @@ for(i in 1:5)
     
     maxIter <- 1000
     e <- 0.001
-    #lambda <-c(exp(4:0),0)
-    lambda <- exp(1)
+    lambda <-c(exp(4:0),0)
     r<-20
     results<-list()
     MAEs <-0
     MAEsTrained <-0
     Ranks <- 0
     count = 1
-    
   
     for(l in lambda)
     {
       result              <- SoftImputeALS(X,l,maxIter,e,training2,r)
-      resultP             <- Ssimpute.als(X,J=r,thresh=e,lambda=l,maxit=maxIter,trace.it = TRUE)
-      ABT                 <- result[[1]]%*%t(result[[2]])
-      ABTP                <- resultP[[1]]%*%diag(sqrt(resultP[[2]]))%*%t(resultP[[3]]%*%diag(sqrt(resultP[[2]])))
-      MAEresultpackage    <-  MAE(resultP[[1]]%*%diag(sqrt(resultP[[2]])),resultP[[3]]%*%diag(sqrt(resultP[[2]])),testing,uniqueUser2,uniqueUser2star,uniqueOffer2)
+      #resultP             <- Ssimpute.als(X,J=r,thresh=e,lambda=l,maxit=maxIter,trace.it = TRUE)
+      #ABT                 <- result[[1]]%*%t(result[[2]])
+      #ABTP                <- resultP[[1]]%*%diag(sqrt(resultP[[2]]))%*%t(resultP[[3]]%*%diag(sqrt(resultP[[2]])))
+      #MAEresultpackage    <-  MAE(resultP[[1]]%*%diag(sqrt(resultP[[2]])),resultP[[3]]%*%diag(sqrt(resultP[[2]])),testing,uniqueUser2,uniqueUser2star,uniqueOffer2)
       MAEresult           <-  MAE(result[[1]],result[[2]],testing,uniqueUser2,uniqueUser2star,uniqueOffer2)
-      MAEs[count]         <- MAEresult[[1]]
-      MAEsTrained[count]  <- MAEresult[[2]]
-      Ranks[count]        <- result[[3]]
+      MAEs[count]         <-  MAEresult[[1]]
+      MAEsTrained[count]  <-  MAEresult[[2]]
+      Ranks[count]        <-  result[[3]]
       count=count+1
     }
   

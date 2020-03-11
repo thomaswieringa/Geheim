@@ -1,7 +1,8 @@
-POmega <- function(A, B, data)
+POmega <- function(A, B, training3)
 {
-  ivec <- data$USERID
-  jvec <- data$OFFERID
+  ivec <- training3$USERID
+  jvec <- training3$OFFERID
+  
   Astar <- A[ivec,]
   Bstar <- B[jvec,]
   predVec <- rowSums(Astar*Bstar)

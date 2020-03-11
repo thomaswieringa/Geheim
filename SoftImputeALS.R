@@ -1,10 +1,11 @@
 SoftImputeALS <- function(X, lambda3, maxIter, e, training2, R)
 {
+  set.seed(1)
   m <- X@Dim[1]
   n <- X@Dim[2]
   #Initialize matrices
   V <- matrix(0,n,R)
-  U <- matrix(rnorm(m*r),m,R)
+  U <- matrix(rnorm(m*R),m,R)
   U <- svd(U)$u
   Dsq <- rep(1,R)
   D <- sqrt(Dsq) 
@@ -18,37 +19,33 @@ SoftImputeALS <- function(X, lambda3, maxIter, e, training2, R)
     V_old  <- V
     Dsq_old  <- Dsq
     
-    if(t>2){
+    #B step
+    B <- t(t(V)*D)
+    A <- t(t(U)*D)
+    Xomega <- POmega(A,B,training2)
+    valueVec <- training2$CLICK - Xomega
+    Xdiff <- sparseMatrix(i = training2$USERID,j = training2$OFFERID, x=valueVec)
   
-      B <- t(t(V)*D)
-      A <- t(t(U)*D)
-      Xomega <- POmega(A,B,training2)
-      Xdiff@x <- X@x - Xomega
-      B_thildeT <- (t(U)%*%Xdiff + t(B)*D)
-    }
+    B_thilde <- t(t(U)%*%Xdiff) + t(t(B)*D)
+    B_thilde <- B_thilde%*%diag(Dsq/(Dsq+lambda3))
     
-    else {
-      B_thildeT <- t(U)%*%Xdiff 
-    }
-    
-    B_thildeT <- B_thildeT*(Dsq/(Dsq+lambda3))
-    
-    SVD1 <- svd(t(B_thildeT))
+    SVD1 <- svd(B_thilde)
     V <- SVD1$u
     Dsq <- SVD1$d
     D <- sqrt(Dsq)
     U   <- U%*%SVD1$v
-   
+    
     #A step
     A <- t(t(U)*D)
-    Xstar <- POmega(A, t(t(V)*D) ,training2)
-    Xdiff@x <- X@x - Xstar
-   
-    A_thildeT <- t(V)%*%t(Xdiff) + D*t(A)
-    A_thildeT <- A_thildeT*(Dsq/(Dsq+lambda3))
-  
+    Xomega <- POmega(A, t(t(V)*D) ,training2)
+    valueVec <- training2$CLICK - Xomega
+    Xdiff <- sparseMatrix(i = training2$USERID,j = training2$OFFERID, x=valueVec)
+    
+    A_thilde <- Xdiff%*%V + t(t(A)*D)
+    A_thilde <- A_thilde%*%diag((Dsq/(Dsq+lambda3)))
+    
     #Update U & D
-    SVD2 <- svd(t(A_thildeT))
+    SVD2 <- svd(A_thilde)
     U    <- SVD2$u
     Dsq  <- SVD2$d
     D    <- sqrt(Dsq)
@@ -62,10 +59,11 @@ SoftImputeALS <- function(X, lambda3, maxIter, e, training2, R)
       print("Solution found")
       
       A <- t(t(U)*D)
-      Xstar <- POmega(A, t(t(V)*D) ,training2)
-      Xdiff@x <- X@x - Xstar
-      A_thildeT <- t(V)%*%t(Xdiff) + D*t(A)
-      SVD2 <- svd(t(A_thildeT))
+      Xomega <- POmega(A, t(t(V)*D) ,training2)
+      valueVec <- training2$CLICK - Xomega
+      Xdiff <- sparseMatrix(i = training2$USERID,j = training2$OFFERID, x=valueVec)
+      A_thilde <- Xdiff%*%V + t(t(A)*D)
+      SVD2 <- svd(A_thilde)
       U    <- SVD2$u
       Dsq  <- SVD2$d
       Dsq  <- pmax(Dsq-lambda3,0)
