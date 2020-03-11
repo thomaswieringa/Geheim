@@ -25,7 +25,7 @@ data <- read.csv("~/Desktop/Observations_Report.csv", sep=";")
 #data <- read.csv("~/Documents/Seminar master/Rscript/Data/Observations_Report.csv", sep=";")
 
 #OFFERS
-Offer <- read.csv2("~/Desktop/OfferDetails_Cleaned.csv")
+Offer <- read.csv2("~/Desktop/Offerdetails_extensie.csv")
 
 
 data <- as.data.table(data)
@@ -57,8 +57,7 @@ data2$OFFERID                  <- mapvalues(data2$OFFERID, from=uniqueOfferData,
 finaltesting$OFFERID           <- mapvalues(finaltesting$OFFERID, from=uniqueOfferData, to=1:length(uniqueOfferData))
 
 #PHI PREP
-Phi <- Offer[,c(3,8:14)]
-Phi <- Offer[,-2]
+Phi <- Offer[,c(2,7:25,28:50)]
 Phi <- as.data.table(Phi)
 Phi$OFFERID <- mapvalues(Phi$OFFERID,from=uniqueOffer,to=1:length(uniqueOffer))
 Phi <- Phi[(Phi$OFFERID <= length(uniqueOffer)),]
@@ -101,7 +100,7 @@ for(i in 1:5)
   
   #TRAINING CLICK RATES AND REMOVE FROM TESTING
   #thresholds  <- c(-1,0:19/20)
-  thresholds  <- 0.1
+  thresholds  <- 0.4
   counter <-1
   for(threshold in thresholds)
   {
@@ -129,7 +128,7 @@ for(i in 1:5)
     PHI2 <- PHI2[(PHI2$OFFERID <= length(uniqueOffer2)),]
     PHI2 <- PHI2[!duplicated(PHI2[,'OFFERID']),]
     PHI2 <- PHI2[order(PHI2$OFFERID),]
-    PHI2 <- PHI2[,-c(1,2)] 
+    PHI2 <- PHI2[,-c(1)] 
     PHI2 <- as.matrix(PHI2)
     
     
