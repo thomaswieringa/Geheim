@@ -1,7 +1,7 @@
 CBSoftImputeALS <- function(X, lambda3, maxIter, e, training2, R,PHI)
 {
   
-  PhiTINV <- ginv(t(PHI))
+  PHITERM <- PHI%*%ginv(t(PHI)%*%PHI)
   
   set.seed(1)
   m <- X@Dim[1]
@@ -29,7 +29,7 @@ CBSoftImputeALS <- function(X, lambda3, maxIter, e, training2, R,PHI)
     valueVec <- training2$CLICK - Xomega
     Xdiff <- sparseMatrix(i = training2$USERID,j = training2$OFFERID, x=valueVec)
     
-    C_thilde <- t(PhiTINV)%*%(t(t(U)%*%Xdiff) + t(t(B)*D))
+    C_thilde <- t(PHITERM) %*%(t(t(U)%*%Xdiff) + t(t(B)*D))
     C_thilde <- C_thilde%*%diag(Dsq/(Dsq+lambda3))
     
     SVD1 <- svd(PHI%*%C_thilde)

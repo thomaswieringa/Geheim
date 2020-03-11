@@ -129,7 +129,7 @@ for(i in 1:5)
     PHI2 <- PHI2[(PHI2$OFFERID <= length(uniqueOffer2)),]
     PHI2 <- PHI2[!duplicated(PHI2[,'OFFERID']),]
     PHI2 <- PHI2[order(PHI2$OFFERID),]
-    PHI2 <- PHI2[,-1] 
+    PHI2 <- PHI2[,-c(1,2)] 
     PHI2 <- as.matrix(PHI2)
     
     
