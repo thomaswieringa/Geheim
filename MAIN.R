@@ -188,7 +188,6 @@ for(i in 1:5)
   
     counter <- counter+1
   }
-  holdCount <- holdCount + 1
 }
 
 #OPNIEUW TRAINEN MET OPTIMALE LAMBDA ZONDER THRESHOLD.
