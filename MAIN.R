@@ -68,7 +68,7 @@ Phi <- Phi[!duplicated(Phi[,'OFFERID']),]
 PHI <- Phi[order(Phi$OFFERID),]
 
 
-holdCount <- 1
+
 for(i in 1:5)
 {
   #DATA PARTITIONING
@@ -99,8 +99,8 @@ for(i in 1:5)
   Clickrates <- calcClickRates(uniqueUsersTraining, training)
   
   #TRAINING CLICK RATES AND REMOVE FROM TESTING
-  #thresholds  <- c(-1,0:19/20)
-  thresholds  <- 0.4
+  #thresholds  <- c(0:16/20)
+  thresholds <- -1
   counter <-1
   for(threshold in thresholds)
   {
@@ -142,9 +142,9 @@ for(i in 1:5)
                       x = training2$CLICK)
     
     
-    maxIter <- 1000
+    maxIter <- 100
     e <- 0.001
-    lambda <-c(exp(4:0),0)
+    lambda <-c(exp(5:0),0)
     r<-20
     results<-list()
     MAEs <-0
@@ -153,7 +153,6 @@ for(i in 1:5)
     MAEsTrained_CB <-0
     Ranks <- 0
     Ranks_CB <- 0
-    Phis  <-list()
     count = 1
     
     for(l in lambda)
@@ -171,7 +170,6 @@ for(i in 1:5)
       MAEs_CB[count]         <-  MAEresult_CB[[1]]
       MAEsTrained_CB[count]  <-  MAEresult_CB[[2]]
       Ranks_CB[count]        <-  result_CB[[3]]
-      Phis[[count]]          <-  result_CB[[4]]
       count=count+1
       
     }
@@ -179,22 +177,15 @@ for(i in 1:5)
     print("Finished one lambda set")
     
     #Write for SoftImpute
-    write.csv(MAEs,file = paste0("MAEs","cr",threshold,"r",r,"fold",holdCount,".csv"),row.names = FALSE)
-    write.csv(MAEsTrained,file = paste0("MAEsonTrained","cr",threshold,"r",r,"fold",holdCount,".csv"),row.names = FALSE)
-    write.csv(Ranks,file = paste0("Ranks","cr",threshold,"r",r,"fold",holdCount,".csv"),row.names = FALSE)
+    write.csv(MAEs,file = paste0("MAEs","cr",threshold,"r",r,"fold",i,".csv"),row.names = FALSE)
+    write.csv(MAEsTrained,file = paste0("MAEsonTrained","cr",threshold,"r",r,"fold",i,".csv"),row.names = FALSE)
+    write.csv(Ranks,file = paste0("Ranks","cr",threshold,"r",r,"fold",i,".csv"),row.names = FALSE)
     
     #Write for CB SoftImpute
-    write.csv(MAEs_CB,file = paste0("MAEs_CB","cr",threshold,"r",r,"fold",holdCount,".csv"),row.names = FALSE)
-    write.csv(MAEsTrained_CB,file = paste0("MAEsonTrained_CB","cr",threshold,"r",r,"fold",holdCount,".csv"),row.names = FALSE)
-    write.csv(Ranks_CB,file = paste0("Ranks_CB","cr",threshold,"r",r,"fold",holdCount,".csv"),row.names = FALSE)
-    
-    count = 1
-    for(l in lambda){
-      write.csv(Ranks_CB,file = paste0("PHI","cr",threshold,"l", count ,"r",r,"fold",holdCount,".csv"),row.names = FALSE)  
-      count <- count + 1 
-    }
-    
-    
+    write.csv(MAEs_CB,file = paste0("MAEs_CB","cr",threshold,"r",r,"fold",i,".csv"),row.names = FALSE)
+    write.csv(MAEsTrained_CB,file = paste0("MAEsonTrained_CB","cr",threshold,"r",r,"fold",i,".csv"),row.names = FALSE)
+    write.csv(Ranks_CB,file = paste0("Ranks_CB","cr",threshold,"r",r,"fold",i,".csv"),row.names = FALSE)
+  
     counter <- counter+1
   }
   holdCount <- holdCount + 1
