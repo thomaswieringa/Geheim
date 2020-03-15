@@ -45,7 +45,7 @@ options(warn=-1)
 intrain      <- createDataPartition(data$USERID, p = 0.8, list = F)
 options(warn=0)
 data$USERID  <- as.numeric(data$USERID)
-data2              <- as.data.table(data[intrain,])
+data2              <- as.data.table(data[intrain,])   
 finaltesting      <- as.data.table(data[-intrain,])
 
 
@@ -69,7 +69,7 @@ PHI <- Phi[order(Phi$OFFERID),]
 
 
 
-for(i in 1:5)
+for(i in c(1))
 {
   #DATA PARTITIONING
   data2$USERID  <- as.factor(data2$USERID)
@@ -100,7 +100,7 @@ for(i in 1:5)
   
   #TRAINING CLICK RATES AND REMOVE FROM TESTING
   #thresholds  <- c(0:16/20)
-  thresholds <- -1
+  thresholds <- c(0:19/20)
   counter <-1
   for(threshold in thresholds)
   {
@@ -148,8 +148,10 @@ for(i in 1:5)
     r<-20
     results<-list()
     MAEs <-0
+    MAEsNUL <-0
     MAEs_CB <-0
     MAEsTrained <-0
+    MAEsTrainedNUL <-0
     MAEsTrained_CB <-0
     Ranks <- 0
     Ranks_CB <- 0
@@ -159,17 +161,21 @@ for(i in 1:5)
     {
       #SoftImpute
       result              <- SoftImputeALS(X,l,maxIter,e,training2,r)
-      MAEresult           <-  MAE(result[[1]],result[[2]],testing,uniqueUser2,uniqueUser2star,uniqueOffer2)
+      MAEresult           <-  RMSE(result[[1]],result[[2]],testing,uniqueUser2,uniqueUser2star,uniqueOffer2,threshold,Clickrates)
+      MAEresultnul           <-  RMSEnul(result[[1]],result[[2]],testing,uniqueUser2,uniqueUser2star,uniqueOffer2,threshold,Clickrates)
+      
       MAEs[count]         <-  MAEresult[[1]]
       MAEsTrained[count]  <-  MAEresult[[2]]
+      MAEsNUL[count]         <-  MAEresultnul[[1]]
+      MAEsTrainedNUL[count]  <-  MAEresultnul[[2]]
       Ranks[count]        <-  result[[3]]
       
       #CB SoftImpute
-      result_CB              <- CBSoftImputeALS(X,l,maxIter,e,training2,r,PHI2)
-      MAEresult_CB           <-  MAE(result_CB[[1]],result_CB[[2]],testing,uniqueUser2,uniqueUser2star,uniqueOffer2)
-      MAEs_CB[count]         <-  MAEresult_CB[[1]]
-      MAEsTrained_CB[count]  <-  MAEresult_CB[[2]]
-      Ranks_CB[count]        <-  result_CB[[3]]
+      #result_CB              <- CBSoftImputeALS(X,l,maxIter,e,training2,r,PHI2)
+      #MAEresult_CB           <-  MAE(result_CB[[1]],result_CB[[2]],testing,uniqueUser2,uniqueUser2star,uniqueOffer2)
+      #MAEs_CB[count]         <-  MAEresult_CB[[1]]
+      #MAEsTrained_CB[count]  <-  MAEresult_CB[[2]]
+      #Ranks_CB[count]        <-  result_CB[[3]]
       count=count+1
       
     }
@@ -179,24 +185,141 @@ for(i in 1:5)
     #Write for SoftImpute
     write.csv(MAEs,file = paste0("MAEs","cr",threshold,"r",r,"fold",i,".csv"),row.names = FALSE)
     write.csv(MAEsTrained,file = paste0("MAEsonTrained","cr",threshold,"r",r,"fold",i,".csv"),row.names = FALSE)
+    write.csv(MAEsNUL,file = paste0("MAEsnul","cr",threshold,"r",r,"fold",i,".csv"),row.names = FALSE)
+    write.csv(MAEsTrainedNUL,file = paste0("MAEsonTrainednul","cr",threshold,"r",r,"fold",i,".csv"),row.names = FALSE)
     write.csv(Ranks,file = paste0("Ranks","cr",threshold,"r",r,"fold",i,".csv"),row.names = FALSE)
     
     #Write for CB SoftImpute
     write.csv(MAEs_CB,file = paste0("MAEs_CB","cr",threshold,"r",r,"fold",i,".csv"),row.names = FALSE)
     write.csv(MAEsTrained_CB,file = paste0("MAEsonTrained_CB","cr",threshold,"r",r,"fold",i,".csv"),row.names = FALSE)
     write.csv(Ranks_CB,file = paste0("Ranks_CB","cr",threshold,"r",r,"fold",i,".csv"),row.names = FALSE)
-  
+    
     counter <- counter+1
   }
 }
 
-#OPNIEUW TRAINEN MET OPTIMALE LAMBDA ZONDER THRESHOLD.
+
 #OPNIEUW TRAINEN MET OPTIMALE LAMBDA EN THRESHOLD.
+bestThreshCF    <- 0.45
+bestLCF         <- exp(1)
+bestThreshCBCF  <-  0.45
+bestLCBCF       <- 0
+
+setkey(data2, USERID)
+uniqueUserData <- unique(data2$USERID)
+ClickratesFinal <- calcClickRates(uniqueUserData, data2)
+
+#part for CF
+
+selectedUsers    <- uniqueUserData[ClickratesFinal>bestThreshCF]    #1 User IDS
+nonselectedUsers <- uniqueUserData[ClickratesFinal<=bestThreshCF]   #1 User IDS
+training2        <- data2[.(selectedUsers)]
+training2star    <- data2[.(nonselectedUsers)]
+
+
+#DATA ID PREP
+uniqueUser2     <- unique(training2$USERID)
+uniqueUser2star <- unique(training2star$USERID)
+uniqueOffer2    <- unique(training2$OFFERID)
+
+training2$USERID  <- mapvalues(training2$USERID, from=uniqueUser2, to=1:length(uniqueUser2))
+training2$OFFERID <- mapvalues(training2$OFFERID,from=uniqueOffer2,to=1:length(uniqueOffer2))
+
+
+#PHI PREP
+PHI2 <- PHI
+PHI2$OFFERID <- mapvalues(PHI2$OFFERID,from=uniqueOffer2,to=1:length(uniqueOffer2))
+PHI2 <- PHI2[(PHI2$OFFERID <= length(uniqueOffer2)),]
+PHI2 <- PHI2[!duplicated(PHI2[,'OFFERID']),]
+PHI2 <- PHI2[order(PHI2$OFFERID),]
+PHI2 <- PHI2[,-c(1)] 
+PHI2 <- as.matrix(PHI2)
+
+
+#CREATE SPARSE MATRIX
+
+training2 <- as.data.frame(training2)
+training2 <- training2[!duplicated(training2[c("USERID","OFFERID")]),]
+
+X         <- sparseMatrix(i = training2$USERID,
+                          j = training2$OFFERID,
+                          x = training2$CLICK)
+
+
+maxIter <- 100
+e <- 0.001
+r<-20
+
+result                     <-  SoftImputeALS(X,bestLCF,maxIter,e,training2,r)
+FINALMAEresultCF           <-  MAE(result[[1]],result[[2]],finaltesting,uniqueUser2,uniqueUser2star,uniqueOffer2)
 
 
 
 
+#part for CBCF
 
+selectedUsers    <- uniqueUserData[ClickratesFinal>bestThreshCBCF]    #1 User IDS
+nonselectedUsers <- uniqueUserData[ClickratesFinal<=bestThreshCBCF]   #1 User IDS
+training2        <- data2[.(selectedUsers)]
+training2star    <- data2[.(nonselectedUsers)]
+
+
+#DATA ID PREP
+uniqueUser2     <- unique(training2$USERID)
+uniqueUser2star <- unique(training2star$USERID)
+uniqueOffer2    <- unique(training2$OFFERID)
+
+training2$USERID  <- mapvalues(training2$USERID, from=uniqueUser2, to=1:length(uniqueUser2))
+training2$OFFERID <- mapvalues(training2$OFFERID,from=uniqueOffer2,to=1:length(uniqueOffer2))
+
+
+#PHI PREP
+PHI2 <- PHI
+PHI2$OFFERID <- mapvalues(PHI2$OFFERID,from=uniqueOffer2,to=1:length(uniqueOffer2))
+PHI2 <- PHI2[(PHI2$OFFERID <= length(uniqueOffer2)),]
+PHI2 <- PHI2[!duplicated(PHI2[,'OFFERID']),]
+PHI2 <- PHI2[order(PHI2$OFFERID),]
+PHI2 <- PHI2[,-c(1)] 
+PHI2 <- as.matrix(PHI2)
+
+
+#CREATE SPARSE MATRIX
+
+training2 <- as.data.frame(training2)
+training2 <- training2[!duplicated(training2[c("USERID","OFFERID")]),]
+
+X <- sparseMatrix(i = training2$USERID,
+                  j = training2$OFFERID,
+                  x = training2$CLICK)
+
+
+maxIter <- 100
+e <- 0.001
+r<-20
+
+
+result_CB              <- CBSoftImputeALS(X,bestLCBCF,maxIter,e,training2,r,PHI2)
+MAEresult_CB           <-  MAE(result_CB[[1]],result_CB[[2]],finaltesting ,uniqueUser2,uniqueUser2star,uniqueOffer2)
+
+
+write.csv2(MAEresult_CB,file="PHI.csv",row.names=FALSE)
+phiMatrix <- as.matrix(result_CB[[4]])
+
+cosim <- matrix(0,42,42)
+
+row.names(cosim) <- colnames(PHI2)
+colnames(cosim) <- colnames(PHI2)
+
+for(i in 1:42)
+{
+  for(j in 1:42)
+  {
+    vec1 <- as.vector(phiMatrix[i,])
+    vec2 <- as.vector(phiMatrix[j,])
+    
+    cosim[i,j] <- (vec1%*%vec2)/(Norm(vec1,2)*Norm(vec2,2))
+  }
+}
 
 
 
